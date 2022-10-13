@@ -19,7 +19,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from datetime import datetime
 today=datetime.today()
-schedule=pd.read_excel(r'C:\Users\13432\Documents\NBA_Schedule.xlsx')
+schedule=pd.read_excel(r'NBA_2023_schedule.xlsx')
 
 d=today.strftime("%a, %b %d, %Y").replace(" 0", " ")
 
