@@ -6,7 +6,7 @@ from basketball5_3 import spreads, scores, DOFactors, homeFactors
 from Predictor_db.NBA_Predictor.db_management import *
 from spreads import spread_picks
 from nba_odds_api import set_odds
-from Predictor_db.NBA_Predictor.game_results import gameResults, pullGames, firstLast
+from Predictor_db.NBA_Predictor.game_results import gameResults, pullGames, yesterdayGames
 from Predictor_db.NBA_Predictor.record import records
 from datetime import datetime, timedelta
 
@@ -114,14 +114,13 @@ def record():
 
 def results():
     values = 'No game played yesterday'
-    first, last = firstLast(yesterday)
-    if first == '':
+    gameIds = yesterdayGames(yesterday)
+    if len(gameIds)==0:
         return values
-    while first <= last:
-        game = pullGames(first)
+    for i in gameIds:
+        game = pullGames(i)
         values = gameResults(game)
         insert_results(values, today)
-        first = '%010d' % (int(first)+1)
 
     return values
 

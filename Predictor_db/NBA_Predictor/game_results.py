@@ -28,17 +28,13 @@ def homeAway(game):
     # 0]['GAME_DATE'] == yesterday][0]['GAME_ID']
 
 
-def firstLast(yesterday):
+def yesterdayGames(yesterday):
     a = leaguegamefinder.LeagueGameFinder(league_id_nullable='00')
     games = a.get_data_frames()[0]
     games = games[games['GAME_DATE'] == yesterday]
     games = games['GAME_ID']
     games = games.values
-    if games.size <= 0:
-        return '', ''
-    first = min(games)
-    last = max(games)
-    return first, last
+    return games
 
 
 def pullGames(gameID):
@@ -64,6 +60,6 @@ def gameResults(games):
     return values
 
 
-first, last = firstLast(yesterday)
-b = gameResults(pullGames(first))
-c = 0
+# first, last = firstLast(yesterday)
+# b = gameResults(pullGames(first))
+# c = 0
