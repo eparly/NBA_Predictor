@@ -3,7 +3,7 @@ from get_stats import get_data
 from Predictor_db.NBA_Predictor.db_management import get_results
 import pandas as pd
 
-schedule = pd.read_excel('flask-server/NBA_2023_schedule.xlsx')
+schedule = pd.read_csv('NBA_Schedule_2023_24.csv')
 
 predictions = []
 

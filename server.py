@@ -16,8 +16,8 @@ sys.path.append(os.path.join(this_dir, 'flask-server\bball5_3_model.py'))
 app = Flask(__name__)
 today = datetime.today()
 yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
-schedule = pd.read_excel(
-    r'C:\Users\13432\Documents\NBA_Predictor\NBA_2023_schedule.xlsx')
+schedule = pd.read_csv(
+    'NBA_Schedule_2023_24.csv')
 
 
 @app.route('/')

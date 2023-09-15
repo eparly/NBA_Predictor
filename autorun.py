@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 
 today = datetime.today()
 yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
-schedule = pd.read_excel('flask-server/NBA_2023_schedule.xlsx')
+schedule = pd.read_csv('NBA_Schedule_2023_24.csv')
 
 
 def predictions():
