@@ -8,7 +8,7 @@ def records(predictions, results):
     game_ids = [x[0] for x in predictions]
     for i in game_ids:
         prediction = [x for x in predictions if x[0] == i]
-        result = [x for x in results if int(x[0])-22200000-1 == i]
+        result = [x for x in results if int(x[0])== i]
 
         if (prediction and result):
             prediction = prediction[0]

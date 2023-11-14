@@ -1,7 +1,7 @@
 # import team data
 from collections import Counter
 import math
-from nba_api.stats.endpoints import leaguedashteamstats
+from nba_api.stats.endpoints import leaguedashteamstats, teamgamestreakfinder
 from nba_api.stats.static import teams
 from nba_api.stats.endpoints import leaguedashptteamdefend
 import random as r
@@ -61,16 +61,32 @@ def defense_3stats(teamname, location):
     return teamstat
 
 
-def montecarlo(gameID, hometeam, awayteam, homeFactor=False):
+def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.0], streak_mode = 'none'):
     home = ''
     away = ''
     global N
-    N = 15
+    N = 5
+
     if homeFactor:
         home = 'Home'
         away = 'Road'
-        N = 30
+        N = 5
 
+    
+    
+    home_streak_multiplier = 1.0
+    away_streak_multiplier = 1.0
+    if streak_mode == 'multiplier':
+        home_streak_multiplier = multiplier[0]
+        away_streak_multiplier = multiplier[1]
+    elif streak_mode == 'factor': 
+        home_streak_multiplier = multiplier[0]
+        away_streak_multiplier = multiplier[1]
+        #TODO - normalize factors to 1
+        home_streak_multiplier = (home_streak_multiplier-away_streak_multiplier)*home_streak_multiplier + home_streak_multiplier
+        away_streak_multiplier = (away_streak_multiplier-home_streak_multiplier)*away_streak_multiplier + away_streak_multiplier
+        
+    
     O_H = offense_stats(hometeam, home)
     D_H = defense_stats(hometeam, home)
     D3_H = defense_3stats(hometeam, home)
@@ -101,6 +117,10 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False):
     # calculating ftm away
     fta_b = O_A['FTA']
     ft_p_b = O_A['FT_PCT']
+    if(len(D_A)<1 or len(D_H) <1):
+        return []
+    if(D_A['GP'].values[0] <= 1 or D_H['GP'].values[0] <= 1):
+        return []
 
     c = 0
     d = 0
@@ -165,8 +185,9 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False):
     if c == d:
         confidence = 0.5
 
-    homescore = homescore/(games)
-    awayscore = awayscore/(games)
+    homescore_adjusted = homescore*home_streak_multiplier/(games)
+    awayscore_adjusted = awayscore*away_streak_multiplier/(games)
+
 
     # results
     spreads = Counter(sorted(spread))
@@ -175,11 +196,11 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False):
     values = {
         "gameID": gameID,
         "hometeam": hometeam,
-        "homescore": homescore,
+        "homescore": homescore_adjusted,
         "awayteam": awayteam,
-        "awayscore": awayscore,
+        "awayscore": awayscore_adjusted,
         "confidence": confidence,
-        "totals": (homescore+awayscore),
+        "totals": (homescore_adjusted+awayscore_adjusted),
         "spread": {
             "spreads": k,
             "counts": v,
