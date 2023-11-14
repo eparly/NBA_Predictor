@@ -8,11 +8,13 @@ DB_PASS = os.environ.get('DB_PASS')
 
 
 connection = mysql.connector.connect(host='localhost',
-                                     database='nba_predictor',
+                                     database='nba_23_24',
                                      user='root',
                                      password=DB_PASS)
 
 def insert_predictions(values, table, date):
+    if values == []:
+        return
 
     cursor = connection.cursor()
     sql = f"INSERT IGNORE INTO {table}(game_id, Hometeam, Awayteam, Homescore, Awayscore, totals, date) VALUES(%s, %s, %s, %s, %s, %s, %s)"
@@ -115,4 +117,11 @@ def insert_spread_picks(values, table):
     cursor.execute(sql, (values[0], values[1], values[2]))
     connection.commit()
 
+def insert_streaked_predictions(values, table):
+
+    cursor = connection.cursor()
+    sql = f"INSERT IGNORE INTO {table}(game_id, hometeam, awayteam, homescore, awayscore, totals, date) VALUES(%s, %s, %s, %s, %s, %s, %s)"
+    cursor.execute(sql, (values["gameID"], values["hometeam"], values["awayteam"],
+                   values["homescore"], values["awayscore"], values["totals"], values["date"]))
+    connection.commit()
 

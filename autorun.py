@@ -1,19 +1,44 @@
 import json
+import pickle
 import pandas as pd
+import time as t
+from nba_api.stats.static import teams
 
-from basketball5_2 import montecarlo
+from basketball5_2 import montecarlo, teamID
 from basketball5_3 import spreads, scores, DOFactors, homeFactors
 from Predictor_db.NBA_Predictor.db_management import *
 from spreads import spread_picks
+from streaks import get_streak
 from nba_odds_api import set_odds
-from Predictor_db.NBA_Predictor.game_results import gameResults, pullGames, yesterdayGames
+from Predictor_db.NBA_Predictor.game_results import gameResults, pullGames, yesterdayGames, matchGameIds
 from Predictor_db.NBA_Predictor.record import records
 from datetime import datetime, timedelta
 
 today = datetime.today()
 yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
 schedule = pd.read_csv('NBA_Schedule_2023_24.csv')
+with open('streak_data', 'rb') as file:
+    team_results = pickle.load(file)
 
+with open('streak_point_changes', 'rb') as file:
+    streak_point_changes = pickle.load(file)
+
+def teamName(teamname, teams):
+
+    teams = teams.get_teams()
+    ID = [x for x in teams if x['full_name'] == teamname][0]
+    ID = ID['abbreviation']
+    return ID
+
+def streakMultiplier(teamname):
+    streak_info = get_streak(teamName(teamname, teams)).split(' ')
+    streak_type = streak_info[0]
+    streak_length = int(streak_info[1])
+    streak_data = streak_point_changes
+    if (streak_length == 1):
+        return 1
+    streak_multiplier = streak_data[streak_type, streak_length]
+    return streak_multiplier
 
 def predictions():
 
@@ -33,12 +58,22 @@ def predictions():
             values = 'No game today'
             k=0
             for i in todayIndex:
-                prediction = get_predictions('factors', list(todayIndex)[k])
+                prediction = get_predictions('streak_factor', list(todayIndex)[k])
+                prediction = [(0, 0, 0, 0, 0, 0, 0)]
                 if prediction == [(0, 0, 0, 0, 0, 0, 0)]:
                     hometeam = schedule.at[i, "Home/Neutral"]
                     awayteam = schedule.at[i, "Visitor/Neutral"]
+                    
+                    home_multiplier = streakMultiplier(hometeam)
+                    t.sleep(3)
+                    
+                    away_multiplier = streakMultiplier(awayteam)
+                    t.sleep(3)
+                    game_multiplier = [home_multiplier,away_multiplier]
 
                     values = montecarlo(i, hometeam, awayteam)
+                    if values == []:
+                        continue
                     insert_predictions(values, 'games', today)
 
                     homeFactor = montecarlo(i, hometeam, awayteam, homeFactor=True)
@@ -56,7 +91,13 @@ def predictions():
                     factors = DOFactors(i, hometeam, awayteam)
                     insert_factors(factors, today)
 
-                    results.append(factors)
+                    streaks_multipliers = montecarlo(i, hometeam, awayteam, multiplier=game_multiplier, streak_mode='multiplier')
+                    insert_predictions(streaks_multipliers, 'streak_multiplier', today)
+
+                    streaks_factors = montecarlo(i, hometeam, awayteam, multiplier=game_multiplier, streak_mode='factor')
+                    insert_predictions(streaks_factors, 'streak_factor', today)
+
+                    results.append(streaks_factors)
                 k+=1
 
             
@@ -72,7 +113,8 @@ def record():
     results = get_results()
     predictions = get_predictions('games', "all")
     correct, games = records(predictions, results)
-
+    if games == 0:
+        return
     score = {
         "correct": correct,
         "total": games,
@@ -109,18 +151,42 @@ def record():
         "percentage": round(correct/games, 4)
     }
     insert_record(today, score, 'record_4')
+
+    scores = get_predictions('streak_multiplier', 'all')
+    correct, games = records(scores, results)
+
+    score = {
+        "correct": correct,
+        "total": games,
+        "percentage": round(correct/games, 4)
+    }
+    insert_record(today, score, 'streak_multiplier_record')
+
+    scores = get_predictions('streak_factor', 'all')
+    correct, games = records(scores, results)
+
+    score = {
+        "correct": correct,
+        "total": games,
+        "percentage": round(correct/games, 4)
+    }
+    insert_record(today, score, 'streak_factor_record')
     return score
 
 
 def results():
     values = 'No game played yesterday'
-    gameIds = yesterdayGames(yesterday)
-    if len(gameIds)==0:
-        return values
-    for i in gameIds:
-        game = pullGames(i)
+    gameData = matchGameIds()
+    for game in gameData:
         values = gameResults(game)
         insert_results(values, today)
+    # gameIds = yesterdayGames(yesterday)
+    # if len(gameIds)==0:
+    #     return values
+    # for i in gameIds:
+    #     game = pullGames(i)
+    #     values = gameResults(game)
+    #     insert_results(values, today)
 
     return values
 
@@ -129,6 +195,8 @@ def odds():
     d = today.strftime('%a, %b %d, %Y').replace(" 0", " ")
     todayGames = schedule.loc[schedule['Date'] == d]
     todayIndex = list(todayGames.index)
+    if todayIndex == []:
+        return
 
     odds = get_predictions('odds', list(todayIndex)[-1])
     if odds == [(0, 0, 0, 0, 0, 0, 0)]:
@@ -144,3 +212,4 @@ predictions()
 odds()
 spread_picks('spreads')
 spread_picks('homefactor_spreads')
+

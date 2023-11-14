@@ -6,7 +6,7 @@ from basketball5_2 import montecarlo
 from basketball5_3 import spreads, scores, DOFactors
 from Predictor_db.NBA_Predictor.db_management import *
 from nba_odds_api import set_odds
-from Predictor_db.NBA_Predictor.game_results import gameResults, pullGames, firstLast
+from Predictor_db.NBA_Predictor.game_results import gameResults, pullGames, yesterdayGameData, yesterdayGames
 from Predictor_db.NBA_Predictor.record import records
 from datetime import datetime, timedelta
 
@@ -37,6 +37,13 @@ def home():
 
     results4 = []
     games4 = []
+
+    results5 = []
+    games5 = []
+
+    results6 = []
+    games6 = []
+
     spread_list = []
 
     odds = []
@@ -46,6 +53,8 @@ def home():
     record2 = []
     record3 = []
     record4 = []
+    record5 = []
+    record6 = []
     for i in todayIndex:
         game = get_predictions('games', i)[0]
         results.append((game[3], game[4]))
@@ -63,6 +72,16 @@ def home():
         results4.append((game4[3], game4[4]))
         games4.append(game4)
 
+        game5 = get_predictions('streak_multiplier', i)[0]
+        results5.append((game5[3], game5[4]))
+        games5.append(game5)
+
+        game6 = get_predictions('streak_factor', i)[0]
+        results6.append((game6[3], game6[4]))
+        games6.append(game6)
+
+
+
         todayOdds = get_predictions('odds', i)[0]
         odds.append(todayOdds)
 
@@ -74,21 +93,31 @@ def home():
     predictions2 = get_predictions('scores', "all")
     predictions3 = get_predictions('factors', "all")
     predictions4 = get_predictions('montecarlohomefactors', 'all')
+    predictions5 = get_predictions('streak_multiplier', "all")
+    predictions6 = get_predictions('streak_factor', "all")
 
     correct1, total1 = records(predictions1, game_results)
     correct2, total2 = records(predictions2, game_results)
     correct3, total3 = records(predictions3, game_results)
     correct4, total4 = records(predictions4, game_results)
+    correct5, total5 = records(predictions5, game_results)
+    correct6, total6 = records(predictions6, game_results)
 
     record1.append((correct1, total1, round(correct1/total1, 4)))
     record2.append((correct2, total2, round(correct2/total2, 4)))
     record3.append((correct3, total3, round(correct3/total3, 4)))
-    # record4.append((correct4, total4, round(correct4/total4, 4)))
+    record4.append((correct4, total4, round(correct4/total4, 4)))
+    record5.append((correct5, total5, round(correct5/total5, 4)))
+    record6.append((correct6, total6, round(correct6/total6, 4)))
+
 
     games.sort(key=lambda x: abs(x[3]-x[4]), reverse=True)
     games2.sort(key=lambda x: abs(x[3]-x[4]), reverse=True)
     games3.sort(key=lambda x: abs(x[3]-x[4]), reverse=True)
     games4.sort(key=lambda x: abs(x[3]-x[4]), reverse=True)
+    games5.sort(key=lambda x: abs(x[3]-x[4]), reverse=True)
+    games6.sort(key=lambda x: abs(x[3]-x[4]), reverse=True)
+
 
     spread_list.sort(key=lambda x: abs(x[3]) - abs(x[2]), reverse=True)
 
@@ -97,11 +126,15 @@ def home():
         games2.append((0, 'no game', 'no game', 0, 0, 0))
         games3.append((0, 'no game', 'no game', 0, 0, 0))
         games4.append((0, 'no game', 'no game', 0, 0, 0))
+        games5.append((0, 'no game', 'no game', 0, 0, 0))
+        games6.append((0, 'no game', 'no game', 0, 0, 0))
 
     winners = [row[0] for row in spread_list]
     spread = [row[1] for row in spread_list]
-    return render_template("template1.html", model1=games, model2=games2, model3=games3, model4=games4,
-                           home=winners, spread=spread_list, model_1=record1, model_2=record2, model_3=record3, odds=odds)
+    return render_template("template1.html", model1=games, model2=games2, model3=games3, model4=games4, model5=games5, model6=games6,
+                           home=winners, spread=spread_list, model_1=record1, model_2=record2, 
+                           model_3=record3, model_4=record4, model_5=record5, model_6=record6, 
+                           odds=odds)
 
 
 @ app.route('/game_id<game_id>')
@@ -159,7 +192,9 @@ def record():
 @ app.route('/results')
 def results():
     values = 'No game played yesterday'
-    first, last = firstLast(yesterday)
+    gameIds= yesterdayGames(yesterday)
+    first = min(gameIds)
+    last = max(gameIds)
     while first <= last:
         game = pullGames(first)
         values = gameResults(game)
@@ -174,7 +209,9 @@ def update_results():
     values = 'no games'
     start_id = '0022200001'
     print('starting')
-    first, last = firstLast(yesterday)
+    gameIds = yesterdayGames(yesterday)
+    first = min(gameIds)
+    last = max(gameIds)
     print(last)
     while start_id != last:
         game = pullGames(start_id)

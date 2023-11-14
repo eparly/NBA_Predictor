@@ -1,14 +1,21 @@
-from time import strftime
 from nba_api.stats.endpoints import leaguegamefinder
-import pymysql
+import pandas as pd
 from datetime import datetime, timedelta
 
-yesterday = datetime.now() - timedelta(1)
-yesterday = datetime.strftime(yesterday, '%Y-%m-%d')
+schedule = pd.read_csv('NBA_Schedule_2023_24.csv')
+    
 
-a = leaguegamefinder.LeagueGameFinder(league_id_nullable='00')
-games = a.get_data_frames()[0]
-games = games.dropna(axis='rows')
+def yesterdayGameData():
+
+    today = datetime.today()
+    d = today.strftime('%a, %b %d, %Y').replace(" 0", " ")
+
+    yesterday = today - timedelta(1)
+    yesterdayFormat2 = datetime.strftime(
+        yesterday, '%a, %b %d, %Y').replace(" 0", " ")
+
+    yesterdayGamesPlayed = schedule.loc[schedule['Date'] == yesterdayFormat2]
+    return yesterdayGamesPlayed
 
 
 def homeAway(game):
@@ -35,6 +42,34 @@ def yesterdayGames(yesterday):
     games = games['GAME_ID']
     games = games.values
     return games
+
+
+def matchGameIds():
+    yesterday = (
+        datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
+    apiGames = leaguegamefinder.LeagueGameFinder(league_id_nullable='00')
+    apiGames = apiGames.get_data_frames()[0]
+    apiGames = apiGames[apiGames['GAME_DATE'] == yesterday]
+    apiGamesIds = apiGames['GAME_ID'].unique()
+    scheduleGame = yesterdayGameData()
+
+    games = []
+    for id in apiGamesIds:
+        game = apiGames.groupby(['GAME_ID']).get_group(id)
+        gameData = homeAway(game.values)
+        homeTeam = gameData[0]
+        if (gameData[0] == 'LA Clippers'):
+            homeTeam= 'Los Angeles Clippers'
+        if (gameData[0] == 'LA Lakers'):
+            homeTeam = 'Los Angeles Clippers'
+        scheduleGameIndex = scheduleGame[scheduleGame['Home/Neutral']
+                                         == homeTeam].index[0]
+        if (not scheduleGameIndex):
+            continue
+        game['GAME_ID'] = scheduleGameIndex
+        games.append(game)
+    return games
+
 
 
 def pullGames(gameID):
