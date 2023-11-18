@@ -1,10 +1,10 @@
+import os
 from nba_api.stats.endpoints import leaguegamefinder
 import pandas as pd
 from datetime import datetime, timedelta
 
-schedule = pd.read_csv('NBA_Schedule_2023_24.csv')
+schedule = pd.read_csv('flask-server/NBA_Schedule_2023_24.csv')
     
-
 def yesterdayGameData():
 
     today = datetime.today()

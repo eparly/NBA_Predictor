@@ -1,3 +1,4 @@
+import os
 import json
 import pickle
 import pandas as pd
@@ -7,7 +8,7 @@ from nba_api.stats.static import teams
 from basketball5_2 import montecarlo, teamID
 from basketball5_3 import spreads, scores, DOFactors, homeFactors
 from Predictor_db.NBA_Predictor.db_management import *
-from spreads import spread_picks
+from spreads import spread_picks, spread_results
 from streaks import get_streak
 from nba_odds_api import set_odds
 from Predictor_db.NBA_Predictor.game_results import gameResults, pullGames, yesterdayGames, matchGameIds
@@ -16,11 +17,13 @@ from datetime import datetime, timedelta
 
 today = datetime.today()
 yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
-schedule = pd.read_csv('NBA_Schedule_2023_24.csv')
-with open('streak_data', 'rb') as file:
+__location__ = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__)))
+schedule = pd.read_csv(os.path.join(__location__, 'NBA_Schedule_2023_24.csv'))
+with open(os.path.join(__location__, 'streak_data'), 'rb') as file:
     team_results = pickle.load(file)
 
-with open('streak_point_changes', 'rb') as file:
+with open(os.path.join(__location__, 'streak_point_changes'), 'rb') as file:
     streak_point_changes = pickle.load(file)
 
 def teamName(teamname, teams):
@@ -171,6 +174,9 @@ def record():
         "percentage": round(correct/games, 4)
     }
     insert_record(today, score, 'streak_factor_record')
+
+    score = spread_results('spread_picks')
+    insert_record(today, score, 'spread_picks_record')
     return score
 
 

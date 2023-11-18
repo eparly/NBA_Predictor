@@ -212,10 +212,10 @@ def create_point_change_violin_plots(data):
 # schedule = Schedule('BOS', '2022')
 # teams = Teams('2022')
 # teams = teams.dataframes.index
-with open('streak_data', 'rb') as file:
-    team_results = pickle.load(file)
+# with open('streak_data', 'rb') as file:
+#     team_results = pickle.load(file)
 # # Call the function to visualize the data for all teams
 # # visualize_streak_data(team_results)
 # get_streak('BOS')
-point_changes = create_point_change_violin_plots(team_results)
+# point_changes = create_point_change_violin_plots(team_results)
 # print(team_results)

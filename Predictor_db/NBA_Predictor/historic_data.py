@@ -6,14 +6,14 @@ import os
 load_dotenv()
 DB_PASS = os.environ.get('DB_PASS')
 connection = mysql.connector.connect(
-        host='localhost', database='nba_predictor', user='root', password=DB_PASS)
+        host='localhost', database='nba_23_24', user='root', password=DB_PASS)
 
 a = leaguegamefinder.LeagueGameFinder(
     league_id_nullable='00')
 
 
 games = a.get_data_frames()[0]
-games = games[games.SEASON_ID.str[-4:] >= '2020']
+games = games[games.SEASON_ID.str[-4:] >= '2015']
 games = games.dropna(axis='rows')
 
 games["HOME"] = games.loc[games["MATCHUP"].str.contains(

@@ -22,7 +22,6 @@ c = 0
 n = 0
 over = 0
 under = 0
-N = 15
 
 
 def teamID(teamname, teams):
