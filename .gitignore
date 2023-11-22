@@ -4,5 +4,6 @@
 
 **/__pycache__/*
 **/.env/*
-```
 
+/__pycache__
+/Predictor_db/NBA_Predictor/__pycache__
