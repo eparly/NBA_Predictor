@@ -1,9 +1,10 @@
 /.env
 *.joblib
 *.pyc
+*.cpython-310.pyc
 
 **/__pycache__/*
 **/.env/*
 
-/__pycache__
-/Predictor_db/NBA_Predictor/__pycache__
+__pycache__/
+*.py[cod]
