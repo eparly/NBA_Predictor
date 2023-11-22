@@ -35,6 +35,8 @@ def teamName(teamname, teams):
 
 def streakMultiplier(teamname):
     streak_info = get_streak(teamName(teamname, teams)).split(' ')
+    if streak_info == ['']:
+        return 1
     streak_type = streak_info[0]
     streak_length = int(streak_info[1])
     streak_data = streak_point_changes
