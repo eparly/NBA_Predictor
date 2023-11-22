@@ -1,5 +1,6 @@
 /.env
 *.joblib
-*.pyc
 __pycache__
+*.cpython-*
 ```
+
