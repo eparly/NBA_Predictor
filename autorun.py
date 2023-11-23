@@ -182,6 +182,16 @@ def record():
 
     score = spread_results('spread_picks')
     insert_record(today, score, 'spread_picks_record')
+
+    scores = get_predictions('home_streak_multiplier', 'all')
+    correct, games = records(scores, results)
+
+    score = {
+        "correct": correct,
+        "total": games,
+        "percentage": round(correct/games, 4)
+    }
+    insert_record(today, score, 'home_streak_multiplier_record')
     return score
 
 
