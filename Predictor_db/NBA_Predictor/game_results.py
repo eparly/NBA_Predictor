@@ -54,7 +54,7 @@ def matchGameIds():
     apiGames = apiGames[apiGames['GAME_DATE'] == yesterday]
     apiGamesIds = apiGames['GAME_ID'].unique()
     scheduleGame = yesterdayGameData()
-    if(scheduleGame.size <=0):
+    if (scheduleGame.size <= 0):
         return []
 
     games = []
@@ -88,8 +88,6 @@ def pullGames(gameID):
 
 
 def gameResults(games):
-    if games.size <= 0:
-        return 'No games'
     game = games[0:2].values
     hometeam, awayteam, homescore, awayscore, gameID = homeAway(game)
     values = {
