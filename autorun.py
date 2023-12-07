@@ -42,7 +42,10 @@ def streakMultiplier(teamname):
     streak_data = streak_point_changes
     if (streak_length == 1):
         return 1
-    streak_multiplier = streak_data[streak_type, streak_length]
+    try:
+        streak_multiplier = streak_data[streak_type, streak_length]
+    except:
+        streak_multiplier = 1
     return streak_multiplier
 
 def predictions():
@@ -65,7 +68,7 @@ def predictions():
             for i in todayIndex:
                 prediction = get_predictions('home_streak_multiplier', list(todayIndex)[k])
                 prediction = [(0, 0, 0, 0, 0, 0, 0)]
-                if prediction == [(0, 0, 0, 0, 0, 0, 0)]:
+                if True:
                     hometeam = schedule.at[i, "Home/Neutral"]
                     awayteam = schedule.at[i, "Visitor/Neutral"]
                     
@@ -198,6 +201,8 @@ def record():
 def results():
     values = 'No game played yesterday'
     gameData = matchGameIds()
+    if gameData == []:
+        return values
     for game in gameData:
         values = gameResults(game)
         insert_results(values, today)
