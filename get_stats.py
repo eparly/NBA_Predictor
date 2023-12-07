@@ -5,7 +5,7 @@ from nba_api.stats.endpoints import leaguedashptteamdefend
 import time as t
 import pandas as pd
 
-N = 10
+N = 5
 
 # defense factor: how much the defensive stats impact average stats
 D = 0.3

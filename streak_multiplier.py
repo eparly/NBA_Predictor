@@ -12,10 +12,15 @@ def streakMultiplier(teamname):
     with open(os.path.join(__location__, 'streak_point_changes'), 'rb') as file:
         streak_point_changes = pickle.load(file)
     streak_info = get_streak(teamName(teamname, teams)).split(' ')
+    if streak_info == ['']:
+        return 1
     streak_type = streak_info[0]
     streak_length = int(streak_info[1])
     streak_data = streak_point_changes
     if (streak_length == 1):
         return 1
-    streak_multiplier = streak_data[streak_type, streak_length]
+    try:
+        streak_multiplier = streak_data[streak_type, streak_length]
+    except:
+        streak_multiplier = 1
     return streak_multiplier

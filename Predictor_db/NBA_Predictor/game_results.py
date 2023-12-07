@@ -54,6 +54,8 @@ def matchGameIds():
     apiGames = apiGames[apiGames['GAME_DATE'] == yesterday]
     apiGamesIds = apiGames['GAME_ID'].unique()
     scheduleGame = yesterdayGameData()
+    if(scheduleGame.size <=0):
+        return []
 
     games = []
     for id in apiGamesIds:
@@ -63,13 +65,16 @@ def matchGameIds():
         if (gameData[0] == 'LA Clippers'):
             homeTeam= 'Los Angeles Clippers'
         if (gameData[0] == 'LA Lakers'):
-            homeTeam = 'Los Angeles Clippers'
+            homeTeam = 'Los Angeles Lakers'
         scheduleGameIndex = scheduleGame[scheduleGame['Home/Neutral']
                                          == homeTeam].index[0]
         if (not scheduleGameIndex):
             continue
-        game['GAME_ID'] = scheduleGameIndex
-        games.append(game)
+        try:
+            game['GAME_ID'] = scheduleGameIndex
+            games.append(game)
+        except:
+            continue
     return games
 
 
@@ -101,6 +106,8 @@ def results():
     today = datetime.today()
     values = 'No game played yesterday'
     gameData = matchGameIds()
+    if (gameData == []):
+        return values
     for game in gameData:
         values = gameResults(game)
         insert_results(values, today)

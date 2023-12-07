@@ -16,12 +16,15 @@ def get_streak(team_name):
         team_name = 'PHO'
     if team_name == 'CHA':
         team_name = 'CHO'
-    schedule = Schedule(team_name)
-    t.sleep(3)
-    schedule = schedule.dataframe
-    schedule = schedule[schedule['streak'] != '']
-    streak = schedule['streak'].iloc[-1]
-    return streak
+    try:
+        schedule = Schedule(team_name)
+        t.sleep(3)
+        schedule = schedule.dataframe
+        schedule = schedule[schedule['streak'] != '']
+        streak = schedule['streak'].iloc[-1]
+        return streak
+    except:
+        return ''
 
 
 def update_streaks(teams, schedule):
