@@ -17,8 +17,7 @@ def get_streak(team_name):
     if team_name == 'CHA':
         team_name = 'CHO'
     try:
-        schedule = Schedule(team_name)
-    
+        schedule = Schedule(team_name)    
         t.sleep(60)
         schedule = schedule.dataframe
         schedule = schedule[schedule['streak'] != '']
@@ -26,8 +25,6 @@ def get_streak(team_name):
         return streak
     except:
         return ''
-
-
 
 def update_streaks(teams, schedule):
     ROLLING_WINDOW = 10

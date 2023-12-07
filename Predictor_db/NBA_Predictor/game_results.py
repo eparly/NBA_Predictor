@@ -3,6 +3,8 @@ from nba_api.stats.endpoints import leaguegamefinder
 import pandas as pd
 from datetime import datetime, timedelta
 
+from Predictor_db.NBA_Predictor.db_management import insert_results
+
 schedule = pd.read_csv('flask-server/NBA_Schedule_2023_24.csv')
     
 def yesterdayGameData():
@@ -64,14 +66,15 @@ def matchGameIds():
             homeTeam= 'Los Angeles Clippers'
         if (gameData[0] == 'LA Lakers'):
             homeTeam = 'Los Angeles Lakers'
-        
+        scheduleGameIndex = scheduleGame[scheduleGame['Home/Neutral']
+                                         == homeTeam].index[0]
+        if (not scheduleGameIndex):
+            continue
         try:
-            scheduleGameIndex = scheduleGame[scheduleGame['Home/Neutral']
-                                             == homeTeam].index[0]
+            game['GAME_ID'] = scheduleGameIndex
+            games.append(game)
         except:
             continue
-        game['GAME_ID'] = scheduleGameIndex
-        games.append(game)
     return games
 
 
@@ -97,6 +100,13 @@ def gameResults(games):
     return values
 
 
-# first, last = firstLast(yesterday)
-# b = gameResults(pullGames(first))
-# c = 0
+def results():
+    today = datetime.today()
+    values = 'No game played yesterday'
+    gameData = matchGameIds()
+    if (gameData == []):
+        return values
+    for game in gameData:
+        values = gameResults(game)
+        insert_results(values, today)
+    return values
