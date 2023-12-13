@@ -101,12 +101,21 @@ def get_historic():
     return result
 
 
-def insert_odds(values):
+def insert_spread_odds(values):
 
     cursor = connection.cursor()
 
     cursor.execute("""INSERT IGNORE INTO odds(game_id, spreads, hometeam, awayteam) VALUES(%s, %s, %s, %s)""", (
         values[0], values[1], values[2], values[3]))
+    connection.commit()
+
+
+def insert_ml_odds(values):
+
+    cursor = connection.cursor()
+
+    cursor.execute("""INSERT IGNORE INTO ml_odds(game_id, ml_home, ml_away, hometeam, awayteam) VALUES(%s, %s, %s, %s, %s)""", (
+        values[0], values[1], values[2], values[3], values[4]))
     connection.commit()
 
 

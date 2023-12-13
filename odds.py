@@ -20,7 +20,7 @@ def odds():
     if todayIndex == []:
         return
 
-    odds = get_predictions('odds', list(todayIndex)[-1])
+    odds = get_predictions('ml_odds', list(todayIndex)[-1])
     if odds == [(0, 0, 0, 0, 0, 0, 0)]:
         todayOdds = set_odds()
         return todayOdds
