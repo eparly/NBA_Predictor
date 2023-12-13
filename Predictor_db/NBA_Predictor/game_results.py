@@ -59,6 +59,7 @@ def matchGameIds():
 
     games = []
     for id in apiGamesIds:
+        n=0
         game = apiGames.groupby(['GAME_ID']).get_group(id)
         gameData = homeAway(game.values)
         homeTeam = gameData[0]
@@ -66,8 +67,12 @@ def matchGameIds():
             homeTeam= 'Los Angeles Clippers'
         if (gameData[0] == 'LA Lakers'):
             homeTeam = 'Los Angeles Lakers'
-        scheduleGameIndex = scheduleGame[scheduleGame['Home/Neutral']
-                                         == homeTeam].index[0]
+        try:
+            scheduleGameIndex = scheduleGame[scheduleGame['Home/Neutral']
+                                             == homeTeam].index[0]
+        except:
+            n+=1
+            continue
         if (not scheduleGameIndex):
             continue
         try:
