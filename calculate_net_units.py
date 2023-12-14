@@ -6,9 +6,10 @@ def calculate_units(table):
     predictions = get_predictions(table, 'all')
     results = get_results()
     ml_odds = get_ml_odds()
+    result_game_ids = [x[0] for x in results]
     odds_game_ids = [x[0] for x in ml_odds]
     prediction_game_ids = [x[0] for x in predictions]
-    game_ids_with_odds = [x for x in prediction_game_ids if x in odds_game_ids]
+    game_ids_with_odds = [x for x in prediction_game_ids if x in odds_game_ids and x in result_game_ids]
     units_won = 0
     for i in game_ids_with_odds:
         prediction = [x for x in predictions if x[0] == i][0]
@@ -22,7 +23,7 @@ def calculate_units(table):
             else:
                 units_won += odds[2]
     units_won -= len(game_ids_with_odds)
-    return units_won
+    return round(units_won, 3)
 
 
 def update_units():
@@ -45,6 +46,6 @@ def update_units():
         "streak_factor": streak_factor_units,
         "home_streak_multiplier": home_streak_multiplier_units
     }
-    insert_units(today, units, 'units')
+    insert_units(today, units)
 
 # calculate_units('games')
