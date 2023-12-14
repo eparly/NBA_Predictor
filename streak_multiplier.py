@@ -1,7 +1,7 @@
 import os
 import pickle
 from streaks import get_streak
-from team_name import teamName
+from utils import teamName
 from nba_api.stats.static import teams
 
 
