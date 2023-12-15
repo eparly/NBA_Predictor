@@ -113,5 +113,5 @@ def results():
         return values
     for game in gameData:
         values = gameResults(game)
-        insert_results(values, today)
+        # insert_results(values, today)
     return values
