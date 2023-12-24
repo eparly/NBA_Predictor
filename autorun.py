@@ -7,14 +7,12 @@ from make_predictions import predictions
 
 results()
 update_records()
-odds()
 update_units()
 predictions()
+odds()
 spread_picks('spreads')
 spread_picks('homefactor_spreads')
 
 # TODO
-# 1. DONE ---- record ml odds, convert from american to decimal - new table 
-# 2. track the record of each model in terms of units gained/lost over time - new table for all models
-# 3. Far future: create a betting plan based on expected value of each bet, 
-# coming from the model's confidence in its prediction, and a daily budget in units
+# 1. Get pace data using measure type: advanced, use that to calculate number of possessions
+# 2. Create ML model for spreads using advanced data. Need to get historical data first, try querying the boxscores endpoint
