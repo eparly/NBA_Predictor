@@ -100,6 +100,25 @@ def get_historic():
     result = cursor.fetchall()
     return result
 
+def get_ml_odds():
+        cursor = connection.cursor()
+        sql = f"SELECT * FROM ml_odds"
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        return result
+
+def insert_units(date, units):
+
+    cursor = connection.cursor()
+
+    cursor.execute("""INSERT IGNORE INTO units(date, games, scores, factors,
+     montecarlohomefactors, streak_multiplier, streak_factor, home_streak_multiplier) 
+     VALUES(%s, %s, %s, %s, %s, %s, %s, %s)""", (
+        date, units['games'], units['scores'], units['factors'], units['montecarlohomefactors'], 
+        units['streak_multiplier'], units['streak_factor'], units['home_streak_multiplier']))
+
+    connection.commit()
+
 
 def insert_spread_odds(values):
 

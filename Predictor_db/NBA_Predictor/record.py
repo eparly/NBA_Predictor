@@ -1,10 +1,8 @@
-# from db_management import *
-
-
 from datetime import datetime
 
 from spreads import spread_results
 from Predictor_db.NBA_Predictor.db_management import get_predictions, get_results, insert_record
+from utils import get_winner
 
 
 def update_records(): 
@@ -104,10 +102,9 @@ def records(predictions, results):
         if (prediction and result):
             prediction = prediction[0]
             result = result[0]
+            predicted_winner = get_winner(prediction)
+            actual_winner = get_winner(result)
             games += 1
-            if ((prediction[3]-prediction[4]) >= 0 and (result[3]-result[4]) >= 0):
-                correct += 1
-
-            if ((prediction[3]-prediction[4]) <= 0 and (result[3]-result[4]) <= 0):
+            if (predicted_winner == actual_winner):
                 correct += 1
     return correct, games
