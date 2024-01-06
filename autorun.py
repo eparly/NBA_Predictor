@@ -14,5 +14,4 @@ spread_picks('spreads')
 spread_picks('homefactor_spreads')
 
 # TODO
-# 1. Get pace data using measure type: advanced, use that to calculate number of possessions
-# 2. Create ML model for spreads using advanced data. Need to get historical data first, try querying the boxscores endpoint
+# 1. Add db table for advanced picks

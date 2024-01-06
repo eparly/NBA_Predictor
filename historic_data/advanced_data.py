@@ -6,6 +6,9 @@ import time as t
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -125,18 +128,21 @@ def train(data):
     # plt.figure(figsize=(12, 10))
     # sns.heatmap(corr, annot=True, cmap='coolwarm')
     # plt.show()
-    # y = y.map({'W': 1, 'L': 0})
+    y = y.map({'W': 1, 'L': 0})
+
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    clf = make_pipeline(StandardScaler(), SVC(gamma='auto'))
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
     
-    model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=1)
-
-
-    model.fit(X_train, y_train)
-
-    y_pred = model.predict(X_test)
-
     accuracy = accuracy_score(y_test, y_pred)
+
+    # model.fit(X_train, y_train)
+
+    # y_pred = model.predict(X_test)
+
+    # accuracy = accuracy_score(y_test, y_pred)
     print(accuracy)
     return model
 
@@ -147,9 +153,9 @@ def get_current_teams_data(home_team, away_team):
     away_id = teamID(away_team, teams)
     
     home_team_stats = LeagueDashTeamStats(team_id_nullable=home_id, 
-                                    measure_type_detailed_defense="Advanced").get_data_frames()[0]
+                                    measure_type_detailed_defense="Advanced", last_n_games=10).get_data_frames()[0]
     away_team_stats = LeagueDashTeamStats(team_id_nullable=away_id,
-                                        measure_type_detailed_defense="Advanced").get_data_frames()[0]
+                                        measure_type_detailed_defense="Advanced", last_n_games=10).get_data_frames()[0]
     
     # used to predict outcome
     # rename HOME_AST_TO to HOME_AST_TOV
@@ -190,3 +196,45 @@ def predict(home_team, away_team):
 
 a=0
 
+from sklearn.cluster import KMeans
+from sklearn.manifold import TSNE
+
+def cluster_and_visualize(data, n_clusters, n_components=2):
+
+    data = data.drop(
+        columns=['HOME_WL', 'AWAY_WL','HOME_GAME_ID', 'AWAY_GAME_ID', 'HOME_TEAM_ID', 'AWAY_TEAM_ID', 
+                 'HOME_TEAM_NAME', 'HOME_TEAM_ABBREVIATION', 'HOME_TEAM_CITY', 
+                 'HOME_USG_PCT', 'HOME_MIN', 'HOME_HOME', 'AWAY_TEAM_NAME', 'AWAY_TEAM_ABBREVIATION', 
+                 'AWAY_TEAM_CITY', 'AWAY_USG_PCT', 'AWAY_MIN', 'AWAY_HOME', 
+                 'HOME_E_OFF_RATING', 'HOME_OFF_RATING', 'HOME_E_DEF_RATING', 'HOME_DEF_RATING',
+                 'HOME_E_NET_RATING', 'HOME_NET_RATING', 'AWAY_E_OFF_RATING', 'AWAY_OFF_RATING',
+                 'AWAY_E_DEF_RATING', 'AWAY_DEF_RATING', 'AWAY_E_NET_RATING', 'AWAY_NET_RATING',
+                 'HOME_PIE', 'AWAY_PIE', 'AWAY_E_USG_PCT', 'AWAY_E_TM_TOV_PCT', 'HOME_E_USG_PCT',
+                 'HOME_E_TM_TOV_PCT'])
+
+    scaler = StandardScaler()
+    scaled_data = scaler.fit_transform(data)
+
+    # Perform tsne
+    tsne = TSNE(n_components=n_components, random_state=42)
+    data_pca = tsne.fit_transform(data)
+
+    # Create a KMeans instance with n_clusters
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    
+    # Fit the model to the PCA-transformed data
+    kmeans.fit(data_pca)
+    
+    # Get the cluster assignments for each data point
+    labels = kmeans.labels_
+    
+    # Plot the PCA-transformed data colored by the cluster assignments
+    plt.scatter(data_pca[:, 0], data_pca[:, 1], c=labels, cmap='viridis')
+    
+    # Plot the cluster centers
+    centers = kmeans.cluster_centers_
+    plt.scatter(centers[:, 0], centers[:, 1], c='red', s=300, alpha=0.5)
+    
+    plt.show()
+
+cluster_and_visualize(data, 5, 3)
