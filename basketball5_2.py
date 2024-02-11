@@ -1,7 +1,7 @@
 # import team data
 from collections import Counter
 import math
-from nba_api.stats.endpoints import leaguedashteamstats, teamgamestreakfinder
+from nba_api.stats.endpoints import leaguedashteamstats, teamdashptshots, leaguedashoppptshot
 from nba_api.stats.static import teams
 from nba_api.stats.endpoints import leaguedashptteamdefend
 import random as r
@@ -35,18 +35,27 @@ def teamID(teamname, teams):
 
 
 def offense_stats(teamname, location):
+    teamstat = teamdashptshots.TeamDashPtShots(team_id = teamID(teamname, teams), last_n_games=N, 
+         per_mode_simple="PerGame").get_data_frames()[0]
 
-    teamstat = leaguedashteamstats.LeagueDashTeamStats(
-        team_id_nullable=teamID(teamname, teams), last_n_games=N, location_nullable=location, per_mode_detailed="PerGame").get_data_frames()[0]
-    if (len(teamstat)==0):
-        teamstat = leaguedashteamstats.LeagueDashTeamStats(
-            team_id_nullable=teamID(teamname, teams), per_mode_detailed="PerGame").get_data_frames()[0]
+    free_throws = leaguedashteamstats.LeagueDashTeamStats(
+        team_id_nullable=teamID(teamname, teams), last_n_games=N, per_mode_detailed="PerGame"
+        ).get_data_frames()[0][['FTA', 'FT_PCT']]
+    teamstat['FTA'] = free_throws['FTA']
+    teamstat['FT_PCT'] = free_throws['FT_PCT']
+    # if (len(teamstat)==0):
+    #     teamstat = leaguedashteamstats.LeagueDashTeamStats(
+    #         team_id_nullable=teamID(teamname, teams), per_mode_detailed="PerGame").get_data_frames()[0]
     return teamstat
 
 
 def defense_stats(teamname, location):
-    teamstat = leaguedashptteamdefend.LeagueDashPtTeamDefend(team_id_nullable=teamID(
-        teamname, teams), last_n_games_nullable=N, location_nullable=location, per_mode_simple="PerGame").get_data_frames()[0]
+    teamstat = leaguedashoppptshot.LeagueDashOppPtShot(team_id_nullable=teamID(teamname, teams),
+        last_n_games_nullable=N, location_nullable=location, per_mode_simple="PerGame").get_data_frames()[0]
+            
+
+    # teamstat = leaguedashptteamdefend.LeagueDashPtTeamDefend(team_id_nullable=teamID(
+    #     teamname, teams), last_n_games_nullable=N, location_nullable=location, per_mode_simple="PerGame").get_data_frames()[0]
     return teamstat
 
 
@@ -86,32 +95,37 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.
         away_streak_multiplier = (away_streak_multiplier-home_streak_multiplier)*away_streak_multiplier + away_streak_multiplier
         
     
-    O_H = offense_stats(hometeam, home)
+    O_H = offense_stats(hometeam, home).loc[0]
     D_H = defense_stats(hometeam, home)
-    D3_H = defense_3stats(hometeam, home)
+    # D3_H = defense_3stats(hometeam, home)
 
-    O_A = offense_stats(awayteam, away)
+    O_A = offense_stats(awayteam, away).loc[0]
     D_A = defense_stats(awayteam, away)
-    D3_A = defense_3stats(awayteam, away)
+    # D3_A = defense_3stats(awayteam, away)
     # calculating 2 pointers home
-    fga_a = (O_H['FGA']-O_H['FG3A']+D_A['D_FGA']-D3_A['FG3A'])/2
-    fgp_a = (O_H['FG_PCT']+D_A['D_FG_PCT'])/2
+    fga_a = (O_H['FG2A']+D_A['FG2A'])/2
+    
+
+    # Use teamdashptshots - general shooting (dataset at index 3?)
+    # for defense use LeagueDashOppPtShot
+
+    fgp_a = (O_H['FG2_PCT']+D_A['FG2_PCT'])/2
 
     # claculating 3 pointers made home
-    tfga_a = (O_H['FG3A']+D3_A['FG3A'])/2
-    tfgp_a = (O_H['FG3_PCT']+D3_A['FG3_PCT'])/2
+    tfga_a = (O_H['FG3A']+D_A['FG3A'])/2
+    tfgp_a = (O_H['FG3_PCT']+D_A['FG3_PCT'])/2
 
     # calculating ftm home
     fta_a = O_H['FTA']
     ft_p_a = O_H['FT_PCT']
 
     # calculating 2 pointers away
-    fga_b = (O_A['FGA']-O_A['FG3A']+D_H['D_FGA']-D3_H['FG3A'])/2
-    fgp_b = (O_A['FG_PCT']+D_H['D_FG_PCT'])/2
+    fga_b = (O_A['FG2A']+D_H['FG2A'])/2
+    fgp_b = (O_A['FG2_PCT']+D_H['FG2_PCT'])/2
 
     # claculating 3 pointers made away
-    tfga_b = (O_A['FG3A']+D3_H['FG3A'])/2
-    tfgp_b = (O_A['FG3_PCT']+D3_H['FG3_PCT'])/2
+    tfga_b = (O_A['FG3A']+D_H['FG3A'])/2
+    tfgp_b = (O_A['FG3_PCT']+D_H['FG3_PCT'])/2
 
     # calculating ftm away
     fta_b = O_A['FTA']
@@ -148,9 +162,9 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.
             if n < tfgp_a[0]:
                 pointsA += 3
               # simulating free throws
-        for i in range(int(fta_a[0])):
+        for i in range(int(fta_a)):
             n = r.random()
-            if n < ft_p_a[0]:
+            if n < ft_p_a:
                 pointsA += 1
 
         # simulating 2 point shots
@@ -164,9 +178,9 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.
             if n < tfgp_b[0]:
                 pointsB += 3
               # simulating free throws
-        for i in range(int(fta_b[0])):
+        for i in range(int(fta_b)):
             n = r.random()
-            if n < ft_p_b[0]:
+            if n < ft_p_b:
                 pointsB += 1
 
         homescore += pointsA
