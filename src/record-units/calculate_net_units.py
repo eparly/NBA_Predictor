@@ -1,6 +1,6 @@
 from datetime import datetime
 from Predictor_db.NBA_Predictor.db_management import get_predictions, get_results, get_ml_odds, insert_units
-from utils import get_winner
+from utils.utils import get_winner
 
 def calculate_units(table):
     predictions = get_predictions(table, 'all')

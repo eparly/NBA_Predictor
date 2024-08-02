@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from spreads import spread_results
+from predictions.spreads import spread_results
 from Predictor_db.NBA_Predictor.db_management import get_predictions, get_results, insert_record
-from utils import get_winner
+from utils.utils import get_winner
 
 
 def update_records(): 

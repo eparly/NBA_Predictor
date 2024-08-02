@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
-from Predictor_db.NBA_Predictor.record import records
+from record import records
 from Predictor_db.NBA_Predictor.db_management import *
-from basketball5_3 import spreads, scores, DOFactors, homeFactors
-from basketball5_2 import montecarlo, teamID
-from streak_multiplier import streakMultiplier
+from predictions.basketball5_3 import spreads, scores, DOFactors, homeFactors
+from predictions.basketball5_2 import montecarlo, teamID
+from predictions.streaks.streak_multiplier import streakMultiplier
 import time as t
 import pandas as pd
 import pickle

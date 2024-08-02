@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
-from nba_odds_api import set_odds
+from odds.nba_odds_api import set_odds
 
 import pandas as pd
 
