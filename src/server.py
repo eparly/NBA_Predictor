@@ -2,12 +2,12 @@ from flask import Flask, render_template
 import pandas as pd
 import os
 import sys
-from basketball5_2 import montecarlo
-from basketball5_3 import spreads, scores, DOFactors
+from predictions.basketball5_2 import montecarlo
+from predictions.basketball5_3 import spreads, scores, DOFactors
 from Predictor_db.NBA_Predictor.db_management import *
-from nba_odds_api import set_odds
-from Predictor_db.NBA_Predictor.game_results import gameResults, pullGames, yesterdayGameData, yesterdayGames
-from Predictor_db.NBA_Predictor.record import records
+from odds.nba_odds_api import set_odds
+from results.game_results import gameResults, pullGames, yesterdayGameData, yesterdayGames
+from record import records
 from datetime import datetime, timedelta
 
 this_dir = os.path.dirname(__file__)

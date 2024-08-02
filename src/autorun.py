@@ -1,9 +1,9 @@
 from calculate_net_units import update_units
-from Predictor_db.NBA_Predictor.game_results import results
-from odds import odds
-from Predictor_db.NBA_Predictor.record import update_records
-from spreads import spread_picks
-from make_predictions import predictions
+from results.game_results import results
+from odds.odds import odds
+from record import update_records
+from predictions.spreads import spread_picks
+from predictions.make_predictions import predictions
 
 results()
 update_records()

@@ -4,7 +4,7 @@ import json
 import unittest.mock
 
 from Predictor_db.NBA_Predictor.db_management import insert_spread_odds, insert_ml_odds, get_predictions
-from mock_odds_response import mock_odds_response
+from odds.mock_odds_response import mock_odds_response
 from dotenv import load_dotenv
 import os
 

@@ -1,6 +1,6 @@
 import os
 import joblib
-from get_stats import get_data
+from src.nba_api_service.get_stats import get_data 
 from Predictor_db.NBA_Predictor.db_management import get_results
 import pandas as pd
 __location__ = os.path.realpath(

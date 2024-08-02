@@ -1,5 +1,5 @@
 from Predictor_db.NBA_Predictor.db_management import get_predictions, insert_spread_picks, get_results
-from Predictor_db.NBA_Predictor.game_results import gameResults, yesterdayGameData
+from results.game_results import gameResults, yesterdayGameData
 
 
 
