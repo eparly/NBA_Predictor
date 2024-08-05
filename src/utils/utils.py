@@ -7,7 +7,7 @@ def teamName(teamname, teams):
 
 
 def get_winner(game_data):
-    if game_data[3] >= game_data[4]:
+    if game_data['homescore'] >= game_data['awayscore']:
         return 'home'
     else:
         return 'away'

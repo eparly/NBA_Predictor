@@ -1,5 +1,7 @@
 import boto3
 from botocore.exceptions import NoCredentialsError, ClientError
+from boto3.dynamodb.conditions import Key, Attr
+
 
 class DynamoDBService:
     def __init__(self, table_name):
@@ -50,3 +52,15 @@ class DynamoDBService:
             else:
                 print(f"Error creating item: {e}")
                 
+    def get_items_by_date_and_sort_key_prefix(self, date, sort_key_prefix):
+        try:
+            response = self.table.query(
+                KeyConditionExpression=Key('date').eq(date) & Key('type-gameId').begins_with(sort_key_prefix)
+            )
+            return response.get('Items', [])
+        except NoCredentialsError:
+            print("Credentials not available")
+            return []
+        except ClientError as e:
+            print(f"Error querying items: {e}")
+            return []
