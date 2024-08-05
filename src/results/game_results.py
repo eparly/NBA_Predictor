@@ -1,7 +1,8 @@
 from nba_api.stats.endpoints import leaguegamefinder
 import pandas as pd
 from datetime import datetime, timedelta
-import os
+import json
+from utils.getSecret import get_secret
 
 class GameResultsService:
     def __init__(self, s3Service, dynamoDbService):
@@ -9,15 +10,22 @@ class GameResultsService:
         self.dynamoDbService = dynamoDbService
 
         self.date = (
-            datetime.now() - timedelta(200)).strftime('%Y-%m-%d')
-        # self.PROXY = os.getenv('PROXY')
+            datetime.now() - timedelta(199)).strftime('%Y-%m-%d')
+        proxyInfo = get_secret('proxy-credentials')
+        proxyInfo = json.loads(proxyInfo)
+        proxy_port = proxyInfo['proxy_port']
+        proxy_username = proxyInfo['proxy_username']
+        proxy_password = proxyInfo['proxy_password']
+        proxy_host = proxyInfo['proxy_host']
+        self.proxy = f'http://{proxy_username}:{proxy_password}@{proxy_host}:{proxy_port}'
+
     def yesterdayGameData(self):
 
         schedule = self.s3Service.get_schedule()
         today = datetime.today()
         d = today.strftime('%a, %b %d, %Y').replace(" 0", " ")
 
-        yesterday = today - timedelta(200)
+        yesterday = today - timedelta(199)
         yesterdayFormat2 = datetime.strftime(
             yesterday, '%a, %b %d, %Y').replace(" 0", " ")
 
@@ -38,10 +46,8 @@ class GameResultsService:
             awayscore = game[1][9]
         gameID = game[0][4]
         return hometeam, awayteam, homescore, awayscore, gameID
-    # a.get_data_frames()[0][a.get_data_frames()[
-        # 0]['GAME_DATE'] == yesterday][0]['GAME_ID']
 
-
+    #todo: remove this function
     def yesterdayGames(yesterday):
         a = leaguegamefinder.LeagueGameFinder(league_id_nullable='00',)
         games = a.get_data_frames()[0]
@@ -52,8 +58,8 @@ class GameResultsService:
 
 
     def matchGameIds(self):
-        PROXY = "http://bihbbirx:19u2egbwdct9@64.64.118.149:6732"
-        games = leaguegamefinder.LeagueGameFinder(proxy=PROXY, date_from_nullable='01/18/2024', date_to_nullable='01/18/2024')
+        # todo: get the correct date
+        games = leaguegamefinder.LeagueGameFinder(proxy=self.proxy, date_from_nullable='01/19/2024', date_to_nullable='01/19/2024')
         apiGames = games.get_data_frames()[0]
         print('success!!')
         apiGames = apiGames[apiGames['GAME_DATE'] == self.date]
@@ -90,7 +96,7 @@ class GameResultsService:
         return games
 
 
-
+    #todo: remove this function
     def pullGames(gameID):
         a = leaguegamefinder.LeagueGameFinder(league_id_nullable='00')
         games = a.get_data_frames()[0]
