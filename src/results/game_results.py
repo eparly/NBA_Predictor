@@ -3,12 +3,14 @@ import pandas as pd
 from datetime import datetime, timedelta
 import json
 from utils.getSecret import get_secret
+from s3.s3Service import S3Service
+from dynamodb.dynamoDbService import DynamoDBService
 
 class GameResultsService:
-    def __init__(self, s3Service, dynamoDbService):
+    def __init__(self, s3Service: S3Service, dynamoDbService: DynamoDBService):
         self.s3Service = s3Service
         self.dynamoDbService = dynamoDbService
-
+        #todo: don't hardcode dates
         self.date = (
             datetime.now() - timedelta(199)).strftime('%Y-%m-%d')
         proxyInfo = get_secret('proxy-credentials')
