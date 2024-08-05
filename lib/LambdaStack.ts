@@ -3,6 +3,8 @@ import { Table } from "aws-cdk-lib/aws-dynamodb";
 import { Code, Function, LayerVersion, Runtime } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
+import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
+import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { Construct } from "constructs";
 
 export type LambdaStackDeps = {
@@ -51,5 +53,22 @@ export class LambdaStack extends Stack {
             memorySize: 256
         })
         deps.table.grantReadWriteData(this.recordLambda)
+
+        const invokeResultsLambda = new LambdaInvoke(this, 'InvokeResultsLambda', {
+            lambdaFunction: this.resultsLambda,
+        })
+        const invokeRecordLambda = new LambdaInvoke(this, 'InvokeRecordLambda', {
+            lambdaFunction: this.recordLambda
+        })
+
+        const definition = invokeResultsLambda.next(invokeRecordLambda)
+        const stateMachine = new StateMachine(this, 'StateMachine', {
+            definition,
+            // Set timeout once we know how long it should take
+            // timeout: Duration.minutes(5)
+        })
+
+        this.resultsLambda.grantInvoke(stateMachine)
+        this.recordLambda.grantInvoke(stateMachine)
     }
 }
