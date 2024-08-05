@@ -143,17 +143,14 @@ class RecordService:
         for i in game_ids_with_odds:
             prediction = [x for x in predictions if x['type-gameId'].split('::')[1] == i][0]
             result =  [x for x in results if x['type-gameId'].split('::')[1] == i][0]
-            odds = [x for x in odds if x['type-gameId'].split('::')[1] == i][0]
-            print(prediction)
-            print(result)
-            print(odds)
+            single_game_odds = [x for x in odds if x['type-gameId'].split('::')[1] == i][0]
             predicted_winner = get_winner(prediction)
             actual_winner = get_winner(result)
             if predicted_winner == actual_winner:
                 if predicted_winner == 'home':
-                    units_won += float(odds['homeML'])
+                    units_won += float(single_game_odds['homeML'])
                 else:
-                    units_won += float(odds['awayML'])
+                    units_won += float(single_game_odds['awayML'])
         units_won -= len(game_ids_with_odds)
         return round(units_won, 3)
 
