@@ -7,7 +7,7 @@ import { Stack, StackProps } from 'aws-cdk-lib'
 export class StatefulStack extends Stack {
 	public readonly NbaBucket: Bucket
 	public readonly NbaTable: Table
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  	constructor(scope: Construct, id: string, props?: StackProps) {
 		super(scope, id, props)
 		
 		const partitionKey: Attribute = {
@@ -19,6 +19,7 @@ export class StatefulStack extends Stack {
 			name: 'type-gameId',
 			type: AttributeType.STRING
 		}
+			
 		const tableProps: TableProps = {
 			partitionKey,
 			sortKey,
@@ -28,6 +29,6 @@ export class StatefulStack extends Stack {
     // S3 Bucket
     this.NbaBucket = new Bucket(this, 'NbaBucket')
 
-	this.NbaTable = new Table(this, 'NbaTable', tableProps)
+		this.NbaTable = new Table(this, 'NbaTable', tableProps)
   }
 }

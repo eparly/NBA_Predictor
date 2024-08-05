@@ -47,16 +47,6 @@ class GameResultsService:
         gameID = game[0][4]
         return hometeam, awayteam, homescore, awayscore, gameID
 
-    #todo: remove this function
-    def yesterdayGames(yesterday):
-        a = leaguegamefinder.LeagueGameFinder(league_id_nullable='00',)
-        games = a.get_data_frames()[0]
-        games = games[games['GAME_DATE'] == yesterday]
-        games = games['GAME_ID']
-        games = games.values
-        return games
-
-
     def matchGameIds(self):
         # todo: get the correct date
         games = leaguegamefinder.LeagueGameFinder(proxy=self.proxy, date_from_nullable='01/19/2024', date_to_nullable='01/19/2024')
@@ -94,16 +84,6 @@ class GameResultsService:
                 continue
         print(games)
         return games
-
-
-    #todo: remove this function
-    def pullGames(gameID):
-        a = leaguegamefinder.LeagueGameFinder(league_id_nullable='00')
-        games = a.get_data_frames()[0]
-        games = games.dropna(axis='rows')
-        games = games[games['GAME_ID'] == gameID]
-        return games
-
 
     def gameResults(self, games):
         game = games[0:2].values
