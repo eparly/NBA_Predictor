@@ -1,0 +1,27 @@
+{
+  "name": "cdk-project",
+  "version": "0.1.0",
+  "bin": {
+    "cdk-project": "bin/app.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "format": "prettier --write \"{bin,lib}/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
+    "format:check": "prettier --check \"{bin,lib}/**/*.{ts,tsx,js,jsx,json,css,scss,md}\""
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "^1.0.0",
+    "@types/node": "latest",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "^3.3.3",
+    "typescript": "~3.9.7"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "latest"
+  }
+}

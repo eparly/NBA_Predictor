@@ -1,7 +1,7 @@
-from calculate_net_units import update_units
+from record_units.calculate_net_units import update_units
 from results.game_results import results
 from odds.odds import odds
-from record import update_records
+from record_units.record import update_records
 from predictions.spreads import spread_picks
 from predictions.make_predictions import predictions
 
