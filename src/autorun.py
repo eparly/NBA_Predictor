@@ -1,13 +1,8 @@
-from record_units.calculate_net_units import update_units
-from results.game_results import results
 from odds.odds import odds
-from record_units.record import update_records
 from predictions.spreads import spread_picks
 from predictions.make_predictions import predictions
 
-results()
-update_records()
-update_units()
+
 predictions()
 odds()
 spread_picks('spreads')

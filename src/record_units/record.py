@@ -1,17 +1,17 @@
 from datetime import datetime, timedelta
-
-# from predictions.spreads import spread_results
-# from Predictor_db.NBA_Predictor.db_management import get_predictions, get_results, insert_record
 from utils.utils import get_winner
+from dynamodb.dynamoDbService import DynamoDBService
 
 class RecordService:
-    def __init__ (self, dynamoDbService):
+    def __init__ (self, dynamoDbService: DynamoDBService):
         self.dynamoDbService = dynamoDbService
         
     def update_records(self): 
         today = datetime.today()
         yesterday = today - timedelta(1)
         #todo: don't hardcode dates
+        #todo: add support for when no games were played? Maybe don't always pick yesterday
+        #but the most recent day on record
         yesterday = '2024-01-19'
 
         correct = 0
@@ -20,10 +20,13 @@ class RecordService:
         results = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(yesterday, 'results')
         predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(yesterday, 'predictions')
         yesterdayRecord = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(yesterday, 'record')[0]
+        odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(yesterday, 'odds')
     
         correct, games = self.records(predictions, results)
+        units = self.calculate_units(predictions, results, odds)
         if games == 0:
             return
+        #todo: add support for multiple models
         score = {
             #todo: don't hardcode dates
             "date": '2024-01-20',
@@ -31,12 +34,14 @@ class RecordService:
             "today": {
                 "correct": correct,
                 "total": games,
-                "percentage": str(round(correct/games, 4))
+                "percentage": str(round(correct/games, 4)),
+                "units": str(units)
             },
             "allTime": {
                 "correct": yesterdayRecord['allTime']["correct"]+ correct,
                 "total": yesterdayRecord['allTime']['total']+ games,
-                "percentage": str(round((yesterdayRecord['allTime']["correct"]+ correct)/(yesterdayRecord['allTime']['total']+ games), 4))
+                "percentage": str(round((yesterdayRecord['allTime']["correct"]+ correct)/(yesterdayRecord['allTime']['total']+ games), 4)),
+                "units": str(float(yesterdayRecord['allTime']['units']) + units)
             } 
         }
         print(score)
@@ -129,14 +134,49 @@ class RecordService:
                     correct += 1
         return correct, games
     
-    
-    
-# [
-#     {'date': '2024-01-19', 'type-gameId': 'predictions::607', 'hometeam': 'Charlotte Hornets', 'awayteam': 'San Antonio Spurs', 'homescore': Decimal('120'), 'awayscore': Decimal('115')},
-#     {'date': '2024-01-19', 'type-gameId': 'predictions::608', 'hometeam': 'Orlando Magic', 'awayteam': 'Philadelphia 76ers', 'homescore': Decimal('110'), 'awayscore': Decimal('120')},
-#     {'date': '2024-01-19', 'type-gameId': 'predictions::609', 'hometeam': 'Boston Celtics', 'awayteam': 'Denver Nuggets', 'homescore': Decimal('105'), 'awayscore': Decimal('100')},
-#     {'date': '2024-01-19', 'type-gameId': 'predictions::610', 'hometeam': 'Miami Heat', 'awayteam': 'Atlanta Hawks', 'homescore': Decimal('110'), 'awayscore': Decimal('105')},
-#     {'date': '2024-01-19', 'type-gameId': 'predictions::611', 'hometeam': 'New Orleans Pelicans', 'awayteam': 'Phoenix Suns', 'homescore': Decimal('115'), 'awayscore': Decimal('120')},
-#     {'date': '2024-01-19', 'type-gameId': 'predictions::613', 'hometeam': 'Portland Trail Blazers', 'awayteam': 'Indiana Pacers', 'homescore': Decimal('120'), 'awayscore': Decimal('110')},
-#     {'date': '2024-01-19', 'type-gameId': 'predictions::614', 'hometeam': 'Los Angeles Lakers', 'awayteam': 'Brooklyn Nets', 'homescore': Decimal('115'), 'awayscore': Decimal('125')}
-# ]
+    def calculate_units(self, predictions, results, odds):
+        result_game_ids = [x['type-gameId'].split('::')[1] for x in results]
+        odds_game_ids = [x['type-gameId'].split('::')[1] for x in odds]
+        prediction_game_ids = [prediction['type-gameId'].split('::')[1] for prediction in predictions]
+        game_ids_with_odds = [x for x in prediction_game_ids if x in odds_game_ids and x in result_game_ids]
+        units_won = 0
+        for i in game_ids_with_odds:
+            prediction = [x for x in predictions if x['type-gameId'].split('::')[1] == i][0]
+            result =  [x for x in results if x['type-gameId'].split('::')[1] == i][0]
+            odds = [x for x in odds if x['type-gameId'].split('::')[1] == i][0]
+            print(prediction)
+            print(result)
+            print(odds)
+            predicted_winner = get_winner(prediction)
+            actual_winner = get_winner(result)
+            if predicted_winner == actual_winner:
+                if predicted_winner == 'home':
+                    units_won += float(odds['homeML'])
+                else:
+                    units_won += float(odds['awayML'])
+        units_won -= len(game_ids_with_odds)
+        return round(units_won, 3)
+
+    #todo: remove this function when support is added for multiple models
+    def update_units(self):
+        today = datetime.today()
+
+        games_units = self.calculate_units('games')
+        #todo: support multiple models
+        # scores_units = self.calculate_units('scores')
+        # factors_units = self.calculate_units('factors')
+        # montecarlohomefactors_units = self.calculate_units('montecarlohomefactors')
+        # streak_multiplier_units = self.calculate_units('streak_multiplier')
+        # streak_factor_units = self.calculate_units('streak_factor')
+        # home_streak_multiplier_units = self.calculate_units('home_streak_multiplier')
+
+        # units = {
+        #     "games": games_units,
+        #     "scores": scores_units,
+        #     "factors": factors_units,
+        #     "montecarlohomefactors": montecarlohomefactors_units,
+        #     "streak_multiplier": streak_multiplier_units,
+        #     "streak_factor": streak_factor_units,
+        #     "home_streak_multiplier": home_streak_multiplier_units
+        # }
+        # insert_units(today, units)
