@@ -119,7 +119,6 @@ class RecordService:
         games = 0
         correct = 0
 
-        # game_ids = [x[0] for x in predictions]
         game_ids = [prediction['type-gameId'].split('::')[1] for prediction in predictions]
         for i in game_ids:
             prediction = [x for x in predictions if x['type-gameId'].split('::')[1] == i]
