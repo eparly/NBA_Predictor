@@ -1,8 +1,10 @@
 import { Duration, Stack, StackProps } from "aws-cdk-lib";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
 import { Code, Function, LayerVersion, Runtime } from "aws-cdk-lib/aws-lambda";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
+import { Queue } from "aws-cdk-lib/aws-sqs";
 import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { Construct } from "constructs";
@@ -10,11 +12,14 @@ import { Construct } from "constructs";
 export type LambdaStackDeps = {
     bucket: Bucket
     table: Table
+    predictionsQueue: Queue
 }
 
 export class LambdaStack extends Stack {
     private readonly resultsLambda: Function
     private readonly recordLambda: Function
+    private readonly predictionLambdaStarter: Function
+    private readonly predictionLambda: Function
     constructor(scope: Construct, id: string, deps: LambdaStackDeps, props?: StackProps) {
         super(scope, id, props)
 
@@ -53,6 +58,46 @@ export class LambdaStack extends Stack {
             memorySize: 256
         })
         deps.table.grantReadWriteData(this.recordLambda)
+
+        this.predictionLambdaStarter = new Function(this, 'PredictionLambdaStarter', {
+            runtime: Runtime.PYTHON_3_10,
+            code: Code.fromAsset(__dirname + '../../src'),
+            handler: 'predictions/predictions_starter/handler.lambda_handler',
+            layers: [lambdaLayer], //might not be needed?
+            environment: {
+                tableName: deps.table.tableName,
+                bucketName: deps.bucket.bucketName,
+                predictionQueueUrl: deps.predictionsQueue.queueUrl
+            },
+            timeout: Duration.minutes(1),
+            memorySize: 256
+        })
+        deps.table.grantReadWriteData(this.predictionLambdaStarter)
+        deps.bucket.grantRead(this.predictionLambdaStarter)
+        deps.predictionsQueue.grantSendMessages(this.predictionLambdaStarter)
+        secret.grantRead(this.predictionLambdaStarter)
+
+        this.predictionLambda = new Function(this, 'PredictionLambda', {
+            runtime: Runtime.PYTHON_3_10,
+            code: Code.fromAsset(__dirname + '../../src'),
+            handler: 'predictions/predictions/handler.lambda_handler',
+            layers: [lambdaLayer],
+            environment: {
+                tableName: deps.table.tableName,
+                bucketName: deps.bucket.bucketName,
+                predictionQueueUrl: deps.predictionsQueue.queueUrl
+            },
+            timeout: Duration.minutes(5),
+            memorySize: 256,
+            reservedConcurrentExecutions: 1
+        })
+        deps.table.grantReadWriteData(this.predictionLambda)
+        deps.bucket.grantRead(this.predictionLambda)
+        deps.predictionsQueue.grantConsumeMessages(this.predictionLambda)
+        this.predictionLambda.addEventSource(new SqsEventSource(deps.predictionsQueue, {
+            batchSize: 1
+        }))
+        secret.grantRead(this.predictionLambda)
 
         const invokeResultsLambda = new LambdaInvoke(this, 'InvokeResultsLambda', {
             lambdaFunction: this.resultsLambda,

@@ -29,7 +29,7 @@ class S3Service:
             print(f"Error downloading file: {e}")
 
     def get_schedule(self):
-        s3_key = 'NBA_Schedule_2023_24.csv'
+        s3_key = 'NBA_Schedule_2024_25.csv'
         local_path = '/tmp/'
 
 
