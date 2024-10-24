@@ -1,4 +1,4 @@
-from nba_api.stats.endpoints import leaguedashptteamdefend
+from nba_api.stats.endpoints import leaguedashptteamdefend, leaguegamefinder
 from nba_api.stats.endpoints import leaguedashteamstats, teamdashptshots, leaguedashoppptshot
 from nba_api.stats.static import teams
 
@@ -10,6 +10,10 @@ class NBAApiService:
         self.proxy = proxy
         self.N = N
         
+        
+    def getResults(self):
+        games = leaguegamefinder.LeagueGameFinder(proxy=self.proxy, league_id_nullable='00')
+        return games
         
     def teamID(self, teamname, teams):
         teams = teams.get_teams()

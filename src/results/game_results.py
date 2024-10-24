@@ -2,34 +2,28 @@ from nba_api.stats.endpoints import leaguegamefinder
 import pandas as pd
 from datetime import datetime, timedelta
 import json
+import dateutil.tz
+from nba_api_service.nba_api_service import NBAApiService
 from utils.getSecret import get_secret
 from s3.s3Service import S3Service
 from dynamodb.dynamoDbService import DynamoDBService
 
 class GameResultsService:
-    def __init__(self, s3Service: S3Service, dynamoDbService: DynamoDBService):
+    def __init__(self, s3Service: S3Service, dynamoDbService: DynamoDBService, nbaApiService: NBAApiService):
         self.s3Service = s3Service
         self.dynamoDbService = dynamoDbService
-        #todo: don't hardcode dates
-        self.date = (
-            datetime.now() - timedelta(199)).strftime('%Y-%m-%d')
-        proxyInfo = get_secret('proxy-credentials')
-        proxyInfo = json.loads(proxyInfo)
-        proxy_port = proxyInfo['proxy_port']
-        proxy_username = proxyInfo['proxy_username']
-        proxy_password = proxyInfo['proxy_password']
-        proxy_host = proxyInfo['proxy_host']
-        self.proxy = f'http://{proxy_username}:{proxy_password}@{proxy_host}:{proxy_port}'
+        eastern = dateutil.tz.gettz('US/Eastern')
+        self.date = datetime.now(tz = eastern)
+        self.nbaApiService = nbaApiService
 
     def yesterdayGameData(self):
 
         schedule = self.s3Service.get_schedule()
-        today = datetime.today()
-        d = today.strftime('%a, %b %d, %Y').replace(" 0", " ")
 
-        yesterday = today - timedelta(199)
+        yesterday = self.date - timedelta(1)
         yesterdayFormat2 = datetime.strftime(
-            yesterday, '%a, %b %d, %Y').replace(" 0", " ")
+            yesterday, '%a %b %d %Y').replace(" 0", " ")
+
 
         yesterdayGamesPlayed = schedule.loc[schedule['Date'] == yesterdayFormat2]
         return yesterdayGamesPlayed
@@ -50,19 +44,16 @@ class GameResultsService:
         return hometeam, awayteam, homescore, awayscore, gameID
 
     def matchGameIds(self):
-        # todo: get the correct date
-        games = leaguegamefinder.LeagueGameFinder(proxy=self.proxy, date_from_nullable='01/19/2024', date_to_nullable='01/19/2024')
+        games = self.nbaApiService.getResults()
         apiGames = games.get_data_frames()[0]
-        print('success!!')
-        apiGames = apiGames[apiGames['GAME_DATE'] == self.date]
+        yesterday = (self.date - timedelta(1)).strftime('%Y-%m-%d')
+        apiGames = apiGames[apiGames['GAME_DATE'] == yesterday]
         apiGamesIds = apiGames['GAME_ID'].unique()
         scheduleGame = self.yesterdayGameData()
         if (scheduleGame.size <= 0):
             return []
-        print(scheduleGame)
         games = []
         for id in apiGamesIds:
-            print(id)
             n=0
             game = apiGames.groupby(['GAME_ID']).get_group(id)
             gameData = self.homeAway(game.values)
@@ -75,6 +66,7 @@ class GameResultsService:
                 scheduleGameIndex = scheduleGame[scheduleGame['Home/Neutral']
                                                 == homeTeam].index[0]
             except:
+                print('ERROR')
                 n+=1
                 continue
             if (not scheduleGameIndex):
@@ -84,14 +76,14 @@ class GameResultsService:
                 games.append(game)
             except:
                 continue
-        print(games)
         return games
 
     def gameResults(self, games):
         game = games[0:2].values
         hometeam, awayteam, homescore, awayscore, gameID = self.homeAway(game)
+        dateString = (self.date-timedelta(1)).strftime('%Y-%m-%d')
         values = {
-            "date": self.date,
+            "date": dateString,
             "type-gameId": f"results::{gameID}",
             "hometeam": hometeam,
             "homescore": homescore,
@@ -107,7 +99,6 @@ class GameResultsService:
         gameData = self.matchGameIds()
         if (gameData == []):
             return values
-        
         for game in gameData:
             values = self.gameResults(game)
             print(values)
