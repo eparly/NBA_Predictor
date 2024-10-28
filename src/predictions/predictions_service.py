@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import json
 import boto3
+import dateutil.tz
 from dynamodb.dynamoDbService import DynamoDBService
 from nba_api_service.nba_api_service import NBAApiService
 from predictions.basketball5_2 import montecarlo
@@ -20,9 +21,9 @@ class PredictionService:
     def start(self):
         print('Starting predictions')
         schedule = self.s3Service.get_schedule()
-        # todo: don't hardcode dates
-        # today = datetime.today().strftime('%a, %b %d, %Y').replace(" 0", " ")
-        today = (datetime.today() + timedelta(102)).strftime('%a %b %d %Y').replace(" 0", " ")
+        eastern = dateutil.tz.gettz('US/Eastern')
+
+        today = (datetime.now(tz = eastern)).strftime('%a %b %d %Y').replace(" 0", " ")
         
         todayGames = schedule.loc[schedule['Date'] == today]
         
