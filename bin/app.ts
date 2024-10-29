@@ -9,6 +9,7 @@ const app = new App()
 const statefulStack = new StatefulStack(app, 'StatefulStack')
 const lambdaStack = new LambdaStack(app, 'LambdaStack', {
     bucket: statefulStack.NbaBucket,
-    table: statefulStack.NbaTable
+    table: statefulStack.NbaTable,
+    predictionsQueue: statefulStack.predictionQueue
 })
 lambdaStack.addDependency(statefulStack)

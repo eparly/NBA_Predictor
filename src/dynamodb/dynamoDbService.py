@@ -64,3 +64,56 @@ class DynamoDBService:
         except ClientError as e:
             print(f"Error querying items: {e}")
             return []
+    
+    def get_most_recent_record(self, record_type):
+        try:
+            scan_response = self.table.scan(
+                FilterExpression=Attr('type-gameId').begins_with(record_type),
+                ProjectionExpression='#d',
+                ExpressionAttributeNames={'#d': 'date'},
+            )
+            print('scan_response', scan_response)
+            
+            if 'Items' in scan_response and len(scan_response['Items']) > 0:
+                most_recent_date = max(item['date'] for item in scan_response['Items'])
+            else:
+                return None
+            query_response = self.table.query(
+                KeyConditionExpression=Key('date').eq(most_recent_date) & Key('type-gameId').begins_with(record_type),
+                ScanIndexForward=False,  # Sort in descending order by date
+                Limit=1  # Get only the most recent record
+            )
+            
+            print('query_response', query_response)
+            
+            if 'Items' in query_response and len(query_response['Items']) > 0:
+                return query_response['Items'][0]
+            else:
+                return None
+        except NoCredentialsError:
+            print("Credentials not available")
+            return None
+        except ClientError as e:
+            print(f"Error querying items: {e}")
+            return None
+    def get_all_recent_records(self, record_type):
+        print('getting', record_type)
+        try:
+            most_recent_record = self.get_most_recent_record(record_type)
+            print(most_recent_record)
+            if not most_recent_record:
+                return []
+            
+            most_recent_date = most_recent_record['date']
+            
+            response = self.table.query(
+                KeyConditionExpression = Key('date').eq(most_recent_date) & Key('type-gameId').begins_with(record_type)
+            )
+            
+            return response.get('Items', []), most_recent_date
+        except NoCredentialsError:
+            print("Credentials not available")
+            return []
+        except ClientError as e:
+            print(f"Error querying items: {e}")
+            return []
