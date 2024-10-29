@@ -20,6 +20,7 @@ export class LambdaStack extends Stack {
     private readonly recordLambda: Function
     private readonly predictionLambdaStarter: Function
     private readonly predictionLambda: Function
+    private readonly oddsLambda: Function
     constructor(scope: Construct, id: string, deps: LambdaStackDeps, props?: StackProps) {
         super(scope, id, props)
 
@@ -27,7 +28,9 @@ export class LambdaStack extends Stack {
         const lambdaLayer = LayerVersion.fromLayerVersionArn(this, 'NbaAPILayer', layerArn)
 
         const proxyArn = 'arn:aws:secretsmanager:ca-central-1:498430199007:secret:proxy-credentials-VPN1Ya'
-        const secret = Secret.fromSecretCompleteArn(this, 'ProxyInfo', proxyArn)
+        const proxySecret = Secret.fromSecretCompleteArn(this, 'ProxyInfo', proxyArn)
+        const oddsArn = 'arn:aws:secretsmanager:ca-central-1:498430199007:secret:odds_api_key-hqCtvd'
+        const oddsSecret = Secret.fromSecretCompleteArn(this, 'OddsInfo', oddsArn)
         this.resultsLambda = new Function(this, 'ResultsLambda', {
             runtime: Runtime.PYTHON_3_10,
             code: Code.fromAsset(__dirname+ '../../src'),
@@ -40,7 +43,7 @@ export class LambdaStack extends Stack {
             timeout: Duration.minutes(1),
             memorySize: 256
         })
-        secret.grantRead(this.resultsLambda)
+        proxySecret.grantRead(this.resultsLambda)
 
         deps.bucket.grantRead(this.resultsLambda)
         deps.table.grantReadWriteData(this.resultsLambda)
@@ -75,7 +78,7 @@ export class LambdaStack extends Stack {
         deps.table.grantReadWriteData(this.predictionLambdaStarter)
         deps.bucket.grantRead(this.predictionLambdaStarter)
         deps.predictionsQueue.grantSendMessages(this.predictionLambdaStarter)
-        secret.grantRead(this.predictionLambdaStarter)
+        proxySecret.grantRead(this.predictionLambdaStarter)
 
         this.predictionLambda = new Function(this, 'PredictionLambda', {
             runtime: Runtime.PYTHON_3_10,
@@ -97,7 +100,7 @@ export class LambdaStack extends Stack {
         this.predictionLambda.addEventSource(new SqsEventSource(deps.predictionsQueue, {
             batchSize: 1
         }))
-        secret.grantRead(this.predictionLambda)
+        proxySecret.grantRead(this.predictionLambda)
 
         const invokeResultsLambda = new LambdaInvoke(this, 'InvokeResultsLambda', {
             lambdaFunction: this.resultsLambda,
@@ -115,5 +118,25 @@ export class LambdaStack extends Stack {
 
         this.resultsLambda.grantInvoke(stateMachine)
         this.recordLambda.grantInvoke(stateMachine)
+
+        this.oddsLambda = new Function(this, 'OddsLambda', {
+            runtime: Runtime.PYTHON_3_10,
+            code: Code.fromAsset(__dirname + '../../src'),
+            handler: 'odds/handler.lambda_handler',
+            layers: [lambdaLayer],
+            environment: {
+                tableName: deps.table.tableName,
+                bucketName: deps.bucket.bucketName,
+                predictionQueueUrl: deps.predictionsQueue.queueUrl
+            },
+            timeout: Duration.minutes(5),
+            memorySize: 256,
+            reservedConcurrentExecutions: 1
+        })
+
+        oddsSecret.grantRead(this.oddsLambda)
+        deps.table.grantReadWriteData(this.oddsLambda)
+        deps.bucket.grantRead(this.oddsLambda)
+
     }
 }
