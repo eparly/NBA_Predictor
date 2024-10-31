@@ -53,15 +53,17 @@ class OddsService:
             ml_data.append((moneyline_home, moneyline_away, hometeam, awayteam))
             
         matched_order = self.match_order(odds_data, predictions)
+        filtered_odds_data = [row for row in odds_data if (row[1], row[2]) in {(pred['hometeam'], pred['awayteam']) for pred in predictions}]
+
 
         ordered_odds = []
         for i in range(len(matched_order)):
             odds = {
                 'date': self.date,
                 'type-gameId': f"odds::{matched_order[i]}",
-                'hometeam': odds_data[i][1],
-                'awayteam': odds_data[i][2],
-                'spread': str(odds_data[i][0]),
+                'hometeam': filtered_odds_data[i][1],
+                'awayteam': filtered_odds_data[i][2],
+                'spread': str(filtered_odds_data[i][0]),
                 'home_ml': str(ml_data[i][0]),
                 'away_ml': str(ml_data[i][1]),
             }
@@ -71,20 +73,22 @@ class OddsService:
             
     def match_order(self, odds_data, predictions):
         odds_data = np.array(odds_data)
-        predictions = np.array(predictions)
-
-        game_order = []
-        for j in range(len(odds_data)):
-            game_id = [i for i in range(len(
-                predictions)) if odds_data[:, 1:3][j][0] == predictions[i]['hometeam'] and odds_data[:, 1:3][j][1] == predictions[i]['awayteam']]
-            print('game_id:', game_id)
-            if len(game_id) == 0:
-                continue
-            game_id = predictions[game_id][0]['type-gameId'].split('::')[1]
-
-            game_order.append(game_id)
-
-        return game_order
+        team_pair_to_index = {
+            (pred['hometeam'], pred['awayteam']): pred['type-gameId'].split('::')[1]
+            for idx, pred in enumerate(predictions)
+        }
+        
+        indexed_odds_data = []
+        for row in odds_data:
+            team_pair = (row[1], row[2])
+            if team_pair in team_pair_to_index:
+                print(team_pair)
+                indexed_odds_data.append((team_pair_to_index[team_pair], row))
+            else:
+                print('game not found', {team_pair})
+        sorted_odds_data = np.array([game_id for game_id, row in indexed_odds_data])
+        
+        return sorted_odds_data
     
     def american_to_int(self, american_odds):
         if american_odds < 0:
