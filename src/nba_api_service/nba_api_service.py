@@ -21,7 +21,7 @@ class NBAApiService:
         ID = ID['id']
         return ID
     
-    def offense_stats(self, teamname, location):
+    def offense_stats(self, teamname):
         teamstat = teamdashptshots.TeamDashPtShots(proxy=self.proxy, team_id = self.teamID(teamname, teams), last_n_games=self.N, 
             per_mode_simple="PerGame").get_data_frames()[0]
 
@@ -36,9 +36,9 @@ class NBAApiService:
         return teamstat
 
 
-    def defense_stats(self, teamname, location):
+    def defense_stats(self, teamname):
         teamstat = leaguedashoppptshot.LeagueDashOppPtShot(proxy=self.proxy, team_id_nullable=self.teamID(teamname, teams),
-            last_n_games_nullable=self.N, location_nullable=location, per_mode_simple="PerGame").get_data_frames()[0]
+            last_n_games_nullable=self.N, per_mode_simple="PerGame").get_data_frames()[0]
                 
 
         # teamstat = leaguedashptteamdefend.LeagueDashPtTeamDefend(team_id_nullable=teamID(
@@ -46,10 +46,10 @@ class NBAApiService:
         return teamstat
 
     # This is probably not used
-    def defense_3stats(self, teamname, location):
+    def defense_3stats(self, teamname):
         try:
             teamstat = leaguedashptteamdefend.LeagueDashPtTeamDefend(proxy=self.proxy, defense_category='3 Pointers', team_id_nullable=self.teamID(
-                teamname, teams), last_n_games_nullable=self.N, location_nullable=location, per_mode_simple="PerGame").get_data_frames()[0]
+                teamname, teams), last_n_games_nullable=self.N, per_mode_simple="PerGame").get_data_frames()[0]
         except:
             teamstat = leaguedashptteamdefend.LeagueDashPtTeamDefend(proxy=self.proxy, defense_category='3 Pointers', team_id_nullable=self.teamID(
                 teamname, teams), per_mode_simple="PerGame").get_data_frames()[0]

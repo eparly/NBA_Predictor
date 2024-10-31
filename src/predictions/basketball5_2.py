@@ -28,12 +28,12 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.
         away_streak_multiplier = (away_streak_multiplier-home_streak_multiplier)*away_streak_multiplier + away_streak_multiplier
         
     
-    O_H = nba_api_service.offense_stats(hometeam, home).loc[0]
-    D_H = nba_api_service.defense_stats(hometeam, home)
+    O_H = nba_api_service.offense_stats(hometeam).loc[0]
+    D_H = nba_api_service.defense_stats(hometeam)
     # D3_H = defense_3stats(hometeam, home)
 
-    O_A = nba_api_service.offense_stats(awayteam, away).loc[0]
-    D_A = nba_api_service.defense_stats(awayteam, away)
+    O_A = nba_api_service.offense_stats(awayteam).loc[0]
+    D_A = nba_api_service.defense_stats(awayteam)
     # D3_A = defense_3stats(awayteam, away)
     # calculating 2 pointers home
     fga_a = (O_H['FG2A']+D_A['FG2A'])/2

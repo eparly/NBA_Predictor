@@ -32,7 +32,7 @@ def lambda_handler(event, context):
     proxy = f'http://{proxy_username}:{proxy_password}@{proxy_host}:{proxy_port}'
     dynamoDbService = DynamoDBService(tableName)
     s3Service = S3Service(bucketName)
-    nba_api_service = NBAApiService(N=2, proxy=proxy)
+    nba_api_service = NBAApiService(N=4, proxy=proxy)
     
     predictionService = PredictionService(dynamoDbService, s3Service, predictionQueueUrl, nba_api_service)
     response = predictionService.predict(game_id, home_team, away_team)
