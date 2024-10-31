@@ -5,9 +5,12 @@ import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Queue } from "aws-cdk-lib/aws-sqs";
-import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
-import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
+import { Choice, Condition, StateMachine, Wait, WaitTime } from "aws-cdk-lib/aws-stepfunctions";
+import { LambdaInvoke, CallAwsService } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { Construct } from "constructs";
+import { SfnStateMachine } from "aws-cdk-lib/aws-events-targets";
+import { Rule, Schedule } from "aws-cdk-lib/aws-events";
+
 
 export type LambdaStackDeps = {
     bucket: Bucket
@@ -102,23 +105,6 @@ export class LambdaStack extends Stack {
         }))
         proxySecret.grantRead(this.predictionLambda)
 
-        const invokeResultsLambda = new LambdaInvoke(this, 'InvokeResultsLambda', {
-            lambdaFunction: this.resultsLambda,
-        })
-        const invokeRecordLambda = new LambdaInvoke(this, 'InvokeRecordLambda', {
-            lambdaFunction: this.recordLambda
-        })
-
-        const definition = invokeResultsLambda.next(invokeRecordLambda)
-        const stateMachine = new StateMachine(this, 'StateMachine', {
-            definition,
-            // Set timeout once we know how long it should take
-            // timeout: Duration.minutes(5)
-        })
-
-        this.resultsLambda.grantInvoke(stateMachine)
-        this.recordLambda.grantInvoke(stateMachine)
-
         this.oddsLambda = new Function(this, 'OddsLambda', {
             runtime: Runtime.PYTHON_3_10,
             code: Code.fromAsset(__dirname + '../../src'),
@@ -138,5 +124,60 @@ export class LambdaStack extends Stack {
         deps.table.grantReadWriteData(this.oddsLambda)
         deps.bucket.grantRead(this.oddsLambda)
 
+        // Define the Step Function tasks
+        const resultsTask = new LambdaInvoke(this, 'Invoke Results Lambda', {
+            lambdaFunction: this.resultsLambda,
+        })
+    
+        const recordTask = new LambdaInvoke(this, 'Invoke Record Lambda', {
+            lambdaFunction: this.recordLambda,
+        })
+    
+        const predictionStarterTask = new LambdaInvoke(this, 'Invoke Prediction Starter Lambda', {
+            lambdaFunction: this.predictionLambdaStarter,
+        })
+    
+        const waitTask = new Wait(this, 'Wait for Predictions', {
+            time: WaitTime.duration(Duration.minutes(1)),
+        })
+    
+        const checkQueueTask = new CallAwsService(this, 'Check SQS Queue', {
+            service: 'sqs',
+            action: 'getQueueAttributes',
+            parameters: {
+                QueueUrl: deps.predictionsQueue.queueUrl,
+                AttributeNames: ['ApproximateNumberOfMessages'],
+            },
+            iamResources: ['*'],
+            resultPath: '$.queueAttributes',
+        })
+    
+        const choiceState = new Choice(this, 'Is Queue Empty?')
+        const queueEmptyCondition = Condition.stringEquals('$.queueAttributes.Attributes.ApproximateNumberOfMessages', "0")
+    
+        const oddsTask = new LambdaInvoke(this, 'Invoke Odds Lambda', {
+            lambdaFunction: this.oddsLambda,
+        })
+    
+        // Define the state machine
+        const definition = resultsTask
+            .next(recordTask)
+            .next(predictionStarterTask)
+            .next(waitTask)
+            .next(checkQueueTask)
+            .next(choiceState
+                .when(queueEmptyCondition, oddsTask)
+                .otherwise(waitTask))
+    
+        const stateMachine = new StateMachine(this, 'StateMachine', {
+            definition,
+            timeout: Duration.hours(1),
+        })
+    
+        // Create a CloudWatch Event Rule to trigger the Step Function at 8 AM every day
+        new Rule(this, 'ScheduleRule', {
+            schedule: Schedule.cron({ minute: '0', hour: '8' }),
+            targets: [new SfnStateMachine(stateMachine)],
+        })
     }
 }
