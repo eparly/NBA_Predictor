@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 import json
 import boto3
+import dateutil.tz
 
 
 from dynamodb.dynamoDbService import DynamoDBService
@@ -34,11 +35,14 @@ def lambda_handler(event, context):
     s3Service = S3Service(bucketName)
     nba_api_service = NBAApiService(N=4, proxy=proxy)
     
+    eastern = dateutil.tz.gettz('US/Eastern')
+    date = datetime.now(tz = eastern).strftime('%Y-%m-%d')
+    
     predictionService = PredictionService(dynamoDbService, s3Service, predictionQueueUrl, nba_api_service)
     response = predictionService.predict(game_id, home_team, away_team)
     print('response', response)
     item = {
-        'date': datetime.now().strftime('%Y-%m-%d'),
+        'date': date,
         'type-gameId': f"predictions::{game_id}",
         'hometeam': home_team,
         'awayteam': away_team,

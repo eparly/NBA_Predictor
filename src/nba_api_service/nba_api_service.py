@@ -27,9 +27,18 @@ class NBAApiService:
 
         free_throws = leaguedashteamstats.LeagueDashTeamStats(
             proxy=self.proxy, team_id_nullable=self.teamID(teamname, teams), last_n_games=self.N, per_mode_detailed="PerGame"
-            ).get_data_frames()[0][['FTA', 'FT_PCT']]
+            ).get_data_frames()[0]
         teamstat['FTA'] = free_throws['FTA']
         teamstat['FT_PCT'] = free_throws['FT_PCT']
+        teamstat['OREB'] = free_throws['OREB']
+        teamstat['DREB'] = free_throws['DREB']
+        teamstat['REB'] = free_throws['REB']
+        teamstat['AST'] = free_throws['AST']
+        teamstat['TOV'] = free_throws['TOV']
+        teamstat['STL'] = free_throws['STL']
+        teamstat['BLK'] = free_throws['BLK']
+        teamstat['PF'] = free_throws['PF']
+        teamstat['PTS'] = free_throws['PTS']
         # if (len(teamstat)==0):
         #     teamstat = leaguedashteamstats.LeagueDashTeamStats(
         #         team_id_nullable=teamID(teamname, teams), per_mode_detailed="PerGame").get_data_frames()[0]
@@ -114,3 +123,11 @@ class NBAApiService:
         stats = pd.DataFrame(stats)
 
         return stats
+
+
+# if __name__ == '__main__':
+#     nba_api = NBAApiService(5, None)
+#     print(nba_api.offense_stats('Los Angeles Lakers'))
+#     print(nba_api.defense_stats('Los Angeles Lakers'))
+#     print(nba_api.defense_3stats('Los Angeles Lakers'))
+#     print(nba_api.get_data('Los Angeles Lakers', 'Los Angeles Clippers', 0.5))

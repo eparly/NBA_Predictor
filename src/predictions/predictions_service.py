@@ -15,7 +15,9 @@ class PredictionService:
         self.s3Service = s3Service
         self.sqs_queue_url = sqs_queue_url
         self.sqs_client = boto3.client('sqs')
-        
+        eastern = dateutil.tz.gettz('US/Eastern')
+        date = datetime.now(tz = eastern)
+        self.str_date = date.strftime('%Y-%m-%d')
         self.nba_api_service = nba_api_service
       
     def start(self):
@@ -48,8 +50,43 @@ class PredictionService:
     
     def predict(self, game_id, home_team, away_team):
         print('Predicting game', game_id, home_team, away_team)
-        prediction = montecarlo(game_id, home_team, away_team, nba_api_service=self.nba_api_service)
+        O_H = self.nba_api_service.offense_stats(home_team).loc[0]
+        D_H = self.nba_api_service.defense_stats(home_team)
+
+        O_A = self.nba_api_service.offense_stats(away_team).loc[0]
+        D_A = self.nba_api_service.defense_stats(away_team)
+        
+        # Make a copy with float values converted to strings for storage
+        O_H_str = self.convert_floats_to_strings(O_H.to_dict())
+        D_H_str = self.convert_floats_to_strings(D_H.to_dict())
+        O_A_str = self.convert_floats_to_strings(O_A.to_dict())
+        D_A_str = self.convert_floats_to_strings(D_A.to_dict())
+        self.store_pregame(game_id, home_team, O_H_str, D_H_str, 'home')
+        self.store_pregame(game_id, away_team, O_A_str, D_A_str, 'away')
+        prediction = montecarlo(game_id, home_team, away_team, O_H, O_A, D_H, D_A, nba_api_service=self.nba_api_service)
         print(prediction)
         return prediction
+    
+    def convert_floats_to_strings(self, data):
+        if isinstance(data, dict):
+            return {str(k): self.convert_floats_to_strings(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self.convert_floats_to_strings(v) for v in data]
+        elif isinstance(data, float):
+            return str(data)
+        else:
+            return data
+    
+    def store_pregame(self, game_id, teamname, offense, defense, location):
+        item = {
+            'date': self.str_date,
+            'type-gameId': f"pregame::{game_id}::{teamname}",
+            'location': location,
+            'offense': offense,
+            'defense': defense
+        }
+        print(item)
+        self.dynamoDbService.create_item(item)
+        return item
         
     

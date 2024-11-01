@@ -4,7 +4,7 @@ import random as r
 from nba_api_service.nba_api_service import NBAApiService
 
 
-def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.0], streak_mode = 'none', nba_api_service: NBAApiService = None):
+def montecarlo(gameID, hometeam, awayteam, O_H, O_A, D_H, D_A, homeFactor=False, multiplier=[1.0, 1.0], streak_mode = 'none', nba_api_service: NBAApiService = None):
     home = ''
     away = ''
     global N
@@ -27,14 +27,6 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.
         home_streak_multiplier = (home_streak_multiplier-away_streak_multiplier)*home_streak_multiplier + home_streak_multiplier
         away_streak_multiplier = (away_streak_multiplier-home_streak_multiplier)*away_streak_multiplier + away_streak_multiplier
         
-    
-    O_H = nba_api_service.offense_stats(hometeam).loc[0]
-    D_H = nba_api_service.defense_stats(hometeam)
-    # D3_H = defense_3stats(hometeam, home)
-
-    O_A = nba_api_service.offense_stats(awayteam).loc[0]
-    D_A = nba_api_service.defense_stats(awayteam)
-    # D3_A = defense_3stats(awayteam, away)
     # calculating 2 pointers home
     fga_a = (O_H['FG2A']+D_A['FG2A'])/2
     
