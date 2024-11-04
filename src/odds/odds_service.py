@@ -30,7 +30,7 @@ class OddsService:
         }
         response = requests.get(url, headers=headers, params=querystring)
         games = len(response.json()['results'])
-
+        print(response)
         # games from this api arent in the same order as the other one, need to enter these ones in the same order as we do for all predictions
         odds_data = []
         ml_data = []
@@ -48,10 +48,9 @@ class OddsService:
             moneyline_away = self.american_to_int(moneyline_away)
             hometeam = response.json()['results'][i]['teams']['home']['team']
             awayteam = response.json()['results'][i]['teams']['away']['team']
-
             odds_data.append((spreads, hometeam, awayteam))
             ml_data.append((moneyline_home, moneyline_away, hometeam, awayteam))
-            
+        print(ml_data)
         matched_order = self.match_order(odds_data, predictions)
         filtered_odds_data = [row for row in odds_data if (row[1], row[2]) in {(pred['hometeam'], pred['awayteam']) for pred in predictions}]
 
