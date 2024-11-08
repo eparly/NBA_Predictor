@@ -14,20 +14,21 @@ class RecordService:
     
         
     def update_records(self): 
-        correct = 0
-        games = 0
         results, most_recent_date = self.dynamoDbService.get_all_recent_records('results')
-        predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(most_recent_date, 'predictions')
-        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(most_recent_date, 'record')
-        odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(most_recent_date, 'odds')
-    
+        predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'predictions')
+        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'record')
+        odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'odds')
+        
         yesterdayRecord = yesterdayRecord[0] if yesterdayRecord else {}
         correct, games = self.records(predictions, results)
         print('correct', correct)
         print('games', games)
-        units = self.calculate_units(predictions, results, odds)
         if games == 0:
+            print('no games yesterday')
             return
+        
+        units = self.calculate_units(predictions, results, odds)
+
         #todo: add support for multiple models
         all_time = yesterdayRecord.get('allTime', {
             "correct": 0,

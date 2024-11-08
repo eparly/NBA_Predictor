@@ -138,7 +138,7 @@ export class LambdaStack extends Stack {
         })
     
         const waitTask = new Wait(this, 'Wait for Predictions', {
-            time: WaitTime.duration(Duration.minutes(1)),
+            time: WaitTime.duration(Duration.minutes(5)),
         })
     
         const checkQueueTask = new CallAwsService(this, 'Check SQS Queue', {
@@ -158,6 +158,10 @@ export class LambdaStack extends Stack {
         const oddsTask = new LambdaInvoke(this, 'Invoke Odds Lambda', {
             lambdaFunction: this.oddsLambda,
         })
+
+        const waitBeforeOddsTask = new Wait(this, 'Wait Before Odds', {
+            time: WaitTime.duration(Duration.minutes(15)),
+        })
     
         // Define the state machine
         const definition = resultsTask
@@ -166,8 +170,9 @@ export class LambdaStack extends Stack {
             .next(waitTask)
             .next(checkQueueTask)
             .next(choiceState
-                .when(queueEmptyCondition, oddsTask)
+                .when(queueEmptyCondition, waitBeforeOddsTask.next(oddsTask))
                 .otherwise(waitTask))
+
     
         const stateMachine = new StateMachine(this, 'StateMachine', {
             definition,

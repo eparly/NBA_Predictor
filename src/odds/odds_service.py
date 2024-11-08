@@ -30,7 +30,7 @@ class OddsService:
         }
         response = requests.get(url, headers=headers, params=querystring)
         games = len(response.json()['results'])
-        print(response)
+        print(response.json()['results'])
         # games from this api arent in the same order as the other one, need to enter these ones in the same order as we do for all predictions
         odds_data = []
         ml_data = []
