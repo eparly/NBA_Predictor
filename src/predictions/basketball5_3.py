@@ -1,11 +1,11 @@
 import os
 import joblib
-from src.nba_api_service.get_stats import get_data 
+from nba_api_service.get_stats import get_data 
 from Predictor_db.NBA_Predictor.db_management import get_results
 import pandas as pd
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
-schedule = pd.read_csv(os.path.join(__location__, 'NBA_Schedule_2023_24.csv'))
+schedule = pd.read_csv('src/schedules/NBA_Schedule_2023_24.csv')
 
 predictions = []
 

@@ -10,3 +10,33 @@ __pycache__/
 *.py[cod]
 
 /cdk.out
+
+/lambda_layer
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# CDK output
+cdk.out/
+
+# TypeScript
+dist/
+*.js
+*.d.ts
+*.js.map
+
+# Logs
+logs/
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE-specific files
+.vscode/
+.idea/
+*.swp
+*.swo

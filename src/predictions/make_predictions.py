@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from record import records
+from record_units.record import records
 from Predictor_db.NBA_Predictor.db_management import *
 from predictions.basketball5_3 import spreads, scores, DOFactors, homeFactors
 from predictions.basketball5_2 import montecarlo, teamID
@@ -14,12 +14,12 @@ today = datetime.today()
 yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
-schedule = pd.read_csv(os.path.join(__location__, 'NBA_Schedule_2023_24.csv'))
-with open(os.path.join(__location__, 'streak_data'), 'rb') as file:
-    team_results = pickle.load(file)
+schedule = pd.read_csv('src/schedules/NBA_Schedule_2023_24.csv')
+# with open(os.path.join(__location__, 'streak_data'), 'rb') as file:
+#     team_results = pickle.load(file)
 
-with open(os.path.join(__location__, 'streak_point_changes'), 'rb') as file:
-    streak_point_changes = pickle.load(file)
+# with open(os.path.join(__location__, 'streak_point_changes'), 'rb') as file:
+#     streak_point_changes = pickle.load(file)
 
 
 def predictions():

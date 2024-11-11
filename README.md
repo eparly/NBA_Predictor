@@ -1,10 +1,17 @@
 ﻿# NBA_Predictor
-This is my newest version of the nba predictor, now equipted with multiple predictors, and many new features!
 
-This includes functions to update a database based on the performance of each model. Each pick for winners and for spreads is recorded for every game of the current nba season.
+This is my newest version of the NBA Predictor, now equipped with a robust prediction model and many new features!
 
-Also included is a flask server, with a plaintext webpage to display the picks for any given day, as well as the current record for each model.
+## Project Overview
 
-To update the database and generate the predictions for the day, run 'autorun.py'. To veiw the webpage, type 'py server.py' into the terminal
+The NBA Predictor project aims to predict the outcome of every NBA game using a sophisticated prediction model. 
 
-The files containing binaries for some of the models were unable to upload to github, working on a way to get them up here
+The project is now running on AWS infrastructure, and a website to display the picks is in development.
+
+## Features
+
+- Single, sophisticated prediction model
+- Tracking model performance
+- Daily predictions for winners and spreads
+- AWS infrastructure for automated execution and scalability
+- Upcoming website to display picks

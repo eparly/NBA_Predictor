@@ -1,75 +1,10 @@
-# import team data
 from collections import Counter
 import math
-from nba_api.stats.endpoints import leaguedashteamstats, teamdashptshots, leaguedashoppptshot
-from nba_api.stats.static import teams
-from nba_api.stats.endpoints import leaguedashptteamdefend
 import random as r
-import time
+from nba_api_service.nba_api_service import NBAApiService
 
 
-from datetime import datetime
-
-
-today = datetime.today()
-# schedule=pd.read_excel(r'C:\Users\13432\Documents\NBA_Schedule.xlsx')
-
-d = today.strftime("%a, %b %d, %Y")
-
-
-t = time
-c = 0
-n = 0
-over = 0
-under = 0
-
-
-def teamID(teamname, teams):
-
-    teams = teams.get_teams()
-    ID = [x for x in teams if x['full_name'] == teamname][0]
-    ID = ID['id']
-    return ID
-# calculate 2 pointers on average
-# gathering team stats
-
-
-def offense_stats(teamname, location):
-    teamstat = teamdashptshots.TeamDashPtShots(team_id = teamID(teamname, teams), last_n_games=N, 
-         per_mode_simple="PerGame").get_data_frames()[0]
-
-    free_throws = leaguedashteamstats.LeagueDashTeamStats(
-        team_id_nullable=teamID(teamname, teams), last_n_games=N, per_mode_detailed="PerGame"
-        ).get_data_frames()[0][['FTA', 'FT_PCT']]
-    teamstat['FTA'] = free_throws['FTA']
-    teamstat['FT_PCT'] = free_throws['FT_PCT']
-    # if (len(teamstat)==0):
-    #     teamstat = leaguedashteamstats.LeagueDashTeamStats(
-    #         team_id_nullable=teamID(teamname, teams), per_mode_detailed="PerGame").get_data_frames()[0]
-    return teamstat
-
-
-def defense_stats(teamname, location):
-    teamstat = leaguedashoppptshot.LeagueDashOppPtShot(team_id_nullable=teamID(teamname, teams),
-        last_n_games_nullable=N, location_nullable=location, per_mode_simple="PerGame").get_data_frames()[0]
-            
-
-    # teamstat = leaguedashptteamdefend.LeagueDashPtTeamDefend(team_id_nullable=teamID(
-    #     teamname, teams), last_n_games_nullable=N, location_nullable=location, per_mode_simple="PerGame").get_data_frames()[0]
-    return teamstat
-
-
-def defense_3stats(teamname, location):
-    try:
-        teamstat = leaguedashptteamdefend.LeagueDashPtTeamDefend(defense_category='3 Pointers', team_id_nullable=teamID(
-            teamname, teams), last_n_games_nullable=N, location_nullable=location, per_mode_simple="PerGame").get_data_frames()[0]
-    except:
-        teamstat = leaguedashptteamdefend.LeagueDashPtTeamDefend(defense_category='3 Pointers', team_id_nullable=teamID(
-            teamname, teams), per_mode_simple="PerGame").get_data_frames()[0]
-    return teamstat
-
-
-def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.0], streak_mode = 'none'):
+def montecarlo(gameID, hometeam, awayteam, O_H, O_A, D_H, D_A, homeFactor=False, multiplier=[1.0, 1.0], streak_mode = 'none', nba_api_service: NBAApiService = None):
     home = ''
     away = ''
     global N
@@ -79,8 +14,6 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.
         home = 'Home'
         away = 'Road'
         N = 5
-
-    
     
     home_streak_multiplier = 1.0
     away_streak_multiplier = 1.0
@@ -94,14 +27,6 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.
         home_streak_multiplier = (home_streak_multiplier-away_streak_multiplier)*home_streak_multiplier + home_streak_multiplier
         away_streak_multiplier = (away_streak_multiplier-home_streak_multiplier)*away_streak_multiplier + away_streak_multiplier
         
-    
-    O_H = offense_stats(hometeam, home).loc[0]
-    D_H = defense_stats(hometeam, home)
-    # D3_H = defense_3stats(hometeam, home)
-
-    O_A = offense_stats(awayteam, away).loc[0]
-    D_A = defense_stats(awayteam, away)
-    # D3_A = defense_3stats(awayteam, away)
     # calculating 2 pointers home
     fga_a = (O_H['FG2A']+D_A['FG2A'])/2
     
@@ -222,7 +147,3 @@ def montecarlo(gameID, hometeam, awayteam, homeFactor=False, multiplier=[1.0, 1.
 
     return values
 
-
-k = 1
-
-# montecarlo(0, 'Milwaukee Bucks', 'Charlotte Hornets', homeFactor=True)
