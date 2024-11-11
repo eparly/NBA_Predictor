@@ -25,6 +25,16 @@ export const handler: APIGatewayProxyHandler = async (event, context) => {
         };
     }
 
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({
+                message: 'Invalid date format. Expected format: YYYY-MM-DD',
+            }),
+        };
+    }
+
     try {
         const predictions = await controller.getCombinedData(date);
         return {
