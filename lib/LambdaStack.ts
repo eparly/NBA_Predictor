@@ -160,7 +160,7 @@ export class LambdaStack extends Stack {
         })
 
         const waitBeforeOddsTask = new Wait(this, 'Wait Before Odds', {
-            time: WaitTime.duration(Duration.minutes(15)),
+            time: WaitTime.duration(Duration.minutes(30)),
         })
     
         // Define the state machine
