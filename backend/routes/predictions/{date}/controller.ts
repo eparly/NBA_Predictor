@@ -1,46 +1,19 @@
-import { DynamoDB } from 'aws-sdk';
 import { DynamoDBPredictions, DynamoDBOdds, PredictionsResponse } from './types';
+import { DynamoDBService } from '../../../dynamodb/DynamoDBService';
 
 export class PredictionsController {
-    private dynamoDb: DynamoDB.DocumentClient;
-    private tableName: string;
+    private dynamoDbService: DynamoDBService;
 
-    constructor(tableName: string) {
-        this.dynamoDb = new DynamoDB.DocumentClient();
-        this.tableName = tableName;
+    constructor(dynamoDbService: DynamoDBService) {
+        this.dynamoDbService = dynamoDbService
     }
 
     public async getCombinedData(date: string): Promise<PredictionsResponse[]> {
-        const predictionsParams = {
-            TableName: this.tableName,
-            KeyConditionExpression: '#date = :date AND begins_with(#typeGameId, :predictions)',
-            ExpressionAttributeNames: {
-                '#date': 'date',
-                '#typeGameId': 'type-gameId',
-            },
-            ExpressionAttributeValues: {
-                ':date': date,
-                ':predictions': 'predictions',
-            },
-        };
-
-        const oddsParams = {
-            TableName: this.tableName,
-            KeyConditionExpression: '#date = :date AND begins_with(#typeGameId, :odds)',
-            ExpressionAttributeNames: {
-                '#date': 'date',
-                '#typeGameId': 'type-gameId',
-            },
-            ExpressionAttributeValues: {
-                ':date': date,
-                ':odds': 'odds',
-            },
-        }
-
+        
         try {
             const [predictionsData, oddsData] = await Promise.all([
-                this.dynamoDb.query(predictionsParams).promise(),
-                this.dynamoDb.query(oddsParams).promise(),
+                this.dynamoDbService.getPredictions(date),
+                this.dynamoDbService.getOdds(date)
             ]);
 
             const predictionsMap = new Map();

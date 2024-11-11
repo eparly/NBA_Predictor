@@ -1,5 +1,6 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import { PredictionsController } from './controller';
+import { DynamoDBService } from '../../../dynamodb/DynamoDBService';
 
 export const handler: APIGatewayProxyHandler = async (event, context) => {
     const tableName = process.env.TABLE_NAME;
@@ -13,7 +14,9 @@ export const handler: APIGatewayProxyHandler = async (event, context) => {
         };
     }
 
-    const controller = new PredictionsController(tableName);
+    const dynamoDbService = new DynamoDBService(tableName);
+
+    const controller = new PredictionsController(dynamoDbService);
     const date = event.pathParameters?.date;
 
     if (!date) {
@@ -37,6 +40,15 @@ export const handler: APIGatewayProxyHandler = async (event, context) => {
 
     try {
         const predictions = await controller.getCombinedData(date);
+
+        if (!predictions.length) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({
+                    message: 'No predictions found for the given date',
+                }),
+            };
+        }
         return {
             statusCode: 200,
             body: JSON.stringify(predictions),
