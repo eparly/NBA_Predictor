@@ -33,6 +33,15 @@ export class ApiStack extends Stack {
             }
         })
 
+        const recordLambda = new NodejsFunction(this, 'GetRecordRoute', {
+            runtime: Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: 'backend/routes/record/handler.ts',
+            environment: {
+                TABLE_NAME: deps.table.tableName
+            }
+        })
+
         const api = new RestApi(this, 'nbaApi', {
             restApiName: 'NBA API',
             description: 'This service serves NBA predictions'
@@ -40,8 +49,10 @@ export class ApiStack extends Stack {
 
         api.root.addResource('predictions').addResource('{date}').addMethod('GET', new LambdaIntegration(predictorLambda))
         api.root.addResource('results').addResource('{date}').addMethod('GET', new LambdaIntegration(resultsLambda))
+        api.root.addResource('record').addMethod('GET', new LambdaIntegration(recordLambda))
         deps.table.grantReadData(predictorLambda)
         deps.table.grantReadData(resultsLambda)
+        deps.table.grantReadData(recordLambda)
     }
 
 }
