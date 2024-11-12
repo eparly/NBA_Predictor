@@ -24,14 +24,24 @@ export class ApiStack extends Stack {
             }
         })
 
+        const resultsLambda = new NodejsFunction(this, 'GetResultsRoute', {
+            runtime: Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: 'backend/routes/results/{date}/handler.ts',
+            environment: {
+                TABLE_NAME: deps.table.tableName
+            }
+        })
+
         const api = new RestApi(this, 'nbaApi', {
             restApiName: 'NBA API',
             description: 'This service serves NBA predictions'
         })
 
         api.root.addResource('predictions').addResource('{date}').addMethod('GET', new LambdaIntegration(predictorLambda))
-        
+        api.root.addResource('results').addResource('{date}').addMethod('GET', new LambdaIntegration(resultsLambda))
         deps.table.grantReadData(predictorLambda)
+        deps.table.grantReadData(resultsLambda)
     }
 
 }

@@ -42,4 +42,21 @@ export class DynamoDBService {
 
         return this.dynamoDb.query(params).promise();
     }
+
+    public async getResults(date: string): Promise<QueryOutput> {
+        const params = {
+            TableName: this.tableName,
+            KeyConditionExpression: '#date = :date AND begins_with(#typeGameId, :results)',
+            ExpressionAttributeNames: {
+                '#date': 'date',
+                '#typeGameId': 'type-gameId',
+            },
+            ExpressionAttributeValues: {
+                ':date': date,
+                ':results': 'results',
+            },
+        };
+
+        return this.dynamoDb.query(params).promise();
+    }
 }
