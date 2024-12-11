@@ -23,9 +23,14 @@ class RecordService:
         correct, games = self.records(predictions, results)
         print('correct', correct)
         print('games', games)
+        all_time = yesterdayRecord.get('allTime', {
+                "correct": 0,
+                "total": 0,
+                "percentage": "0.0",
+                "units": "0.0"
+        })
         if games == 0:
             score = {
-                #todo: don't hardcode dates
                 "date": self.str_date,
                 "type-gameId": "record",
                 "today": {
@@ -38,24 +43,14 @@ class RecordService:
                     "correct": all_time["correct"]+ correct,
                     "total": all_time['total']+ games,
                     "percentage": str(round((all_time["correct"]+ correct)/(all_time['total']+ games), 4)),
-                    "units": str(float(all_time['units']) + units)
+                    "units": str(float(all_time['units']))
                 } 
             }
             print('no games yesterday')
-            return
-        
         else:
             units = self.calculate_units(predictions, results, odds)
 
-            #todo: add support for multiple models
-            all_time = yesterdayRecord.get('allTime', {
-                "correct": 0,
-                "total": 0,
-                "percentage": "0.0",
-                "units": "0.0"
-            })
             score = {
-                #todo: don't hardcode dates
                 "date": self.str_date,
                 "type-gameId": "record",
                 "today": {
