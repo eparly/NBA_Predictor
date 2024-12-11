@@ -1,36 +1,58 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './NbaLanding.css';
+import teamColours from '../../utils/teamColours';
+import { getData } from '../../services/apiService';
+import { GameCard, GameData } from './picks/NBAPicksPage';
 
 const NbaLanding: React.FC = () => {
-  // Mock data for featured pick and record summary
-  const featuredPick = {
-    game: "Lakers vs. Warriors",
-    pick: "Lakers -4.5",
-    confidence: "High"
-  };
+  const [picks, setPicks] = React.useState<any[]>([])
+  const [recordSummary, setRecordSummary] = React.useState<any>({})
+  const [loading, setLoading] = React.useState<boolean>(true)
+  const [error, setError] = React.useState<string | null>(null)
 
-  const recordSummary = {
-    wins: 42,
-    losses: 18
-  };
+  // const date = new Date().toISOString().split('T')[0]
+  const date = '2024-12-07'
+  
+  useEffect(() => {
+      console.log('here')
+      const fetchData = async () => {
+          try {
+            const result = await getData(`/predictions/${date}`)
+            setPicks(result)
+            console.log('picks: ', picks)
+          }
+          catch (error) {
+            console.log('Error fetching data: ', error)
+            setError('Error fetching data')
+          }
+      }
 
-  // Placeholder for API call to fetch featured pick data
-  // Uncomment and modify when API is available
-  // useEffect(() => {
-  //   fetch('/api/featuredPick')
-  //     .then(response => response.json())
-  //     .then(data => setFeaturedPick(data))
-  //     .catch(error => console.error("Error fetching featured pick:", error));
-  // }, []);
+      fetchData()
+  }, [])
 
-  // Placeholder for API call to fetch record summary data
-  // Uncomment and modify when API is available
-  // useEffect(() => {
-  //   fetch('/api/recordSummary')
-  //     .then(response => response.json())
-  //     .then(data => setRecordSummary(data))
-  //     .catch(error => console.error("Error fetching record summary:", error));
-  // }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await getData('/record')
+        setRecordSummary(result)
+      } catch (error) {
+        console.log('Error fetching data: ', error)
+        setError('Error fetching data')
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  const featuredPick: GameData = picks[0]
+
+  
+  if (error) {
+    return <div>Error: {error}</div>
+  }
+  if (!picks) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div className="nba-landing">
@@ -40,12 +62,14 @@ const NbaLanding: React.FC = () => {
       </p>
       
       {/* Featured Pick Section */}
-      <div className="featured-pick">
-        <h2>Featured Pick</h2>
-        <p><strong>Game:</strong> {featuredPick.game}</p>
-        <p><strong>Pick:</strong> {featuredPick.pick}</p>
-        <p><strong>Confidence:</strong> {featuredPick.confidence}</p>
-      </div>
+      {picks.length > 0 && featuredPick ? (
+        <div className="featured-pick">
+          <h2>Featured Pick</h2>
+          <div className="featured-pick-card">
+            <GameCard key={featuredPick.gameId} game={featuredPick} />
+          </div>
+        </div>
+      ) : <p>Loading...</p>}
       
       {/* Record Summary Section */}
       <div className="record-summary">
