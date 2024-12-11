@@ -93,4 +93,24 @@ export class DynamoDBService {
 
         return result;
     }
+
+    public async getPicks(date: string, type: string): Promise<QueryOutput> {
+        const params = {
+            TableName: this.tableName,
+            KeyConditionExpression: '#date = :date AND begins_with(#typeGameId, :typeGameId)',
+            ExpressionAttributeNames: {
+                '#date': 'date',
+                '#typeGameId': 'type-gameId',
+            },
+            ExpressionAttributeValues: {
+                ':date': date,
+                ':typeGameId': `picks::${type}`,
+            },
+        }
+        console.log(params)
+
+        const result = await this.dynamoDb.query(params).promise()
+        return result
+
+    }
 }
