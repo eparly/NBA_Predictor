@@ -16,6 +16,7 @@ export type LambdaStackDeps = {
     bucket: Bucket
     table: Table
     predictionsQueue: Queue
+    oddsQueue: Queue
 }
 
 export class LambdaStack extends Stack {
@@ -24,6 +25,7 @@ export class LambdaStack extends Stack {
     private readonly predictionLambdaStarter: Function
     private readonly predictionLambda: Function
     private readonly oddsLambda: Function
+    private readonly picksLambda: Function
     constructor(scope: Construct, id: string, deps: LambdaStackDeps, props?: StackProps) {
         super(scope, id, props)
 
@@ -123,6 +125,24 @@ export class LambdaStack extends Stack {
         oddsSecret.grantRead(this.oddsLambda)
         deps.table.grantReadWriteData(this.oddsLambda)
         deps.bucket.grantRead(this.oddsLambda)
+        deps.oddsQueue.grantSendMessages(this.oddsLambda)
+
+        this.picksLambda = new Function(this, 'PicksLambda', {
+            runtime: Runtime.PYTHON_3_10,
+            code: Code.fromAsset(__dirname + '../../src'),
+            handler: 'picks/handler.lambda_handler',
+            layers: [lambdaLayer],
+            environment: {
+                tableName: deps.table.tableName,
+                bucketName: deps.bucket.bucketName,
+                oddsQueueUrl: deps.oddsQueue.queueUrl
+            },
+            timeout: Duration.minutes(5),
+            memorySize: 256,
+            reservedConcurrentExecutions: 1
+        })
+        deps.table.grantReadWriteData(this.picksLambda)
+        deps.oddsQueue.grantConsumeMessages(this.picksLambda)
 
         // Define the Step Function tasks
         const resultsTask = new LambdaInvoke(this, 'Invoke Results Lambda', {

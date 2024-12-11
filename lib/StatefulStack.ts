@@ -9,6 +9,7 @@ export class StatefulStack extends Stack {
 	public readonly NbaBucket: Bucket
 	public readonly NbaTable: Table
 	public readonly predictionQueue: Queue
+	public readonly oddsQueue: Queue
   	constructor(scope: Construct, id: string, props?: StackProps) {
 		super(scope, id, props)
 		
@@ -34,6 +35,8 @@ export class StatefulStack extends Stack {
 		this.predictionQueue = new Queue(this, 'PredictionsQueue', {
 			visibilityTimeout: Duration.minutes(10)
 		})
-			
+		this.oddsQueue = new Queue(this, 'OddsQueue', {
+			visibilityTimeout: Duration.minutes(10)
+		})		
   }
 }
