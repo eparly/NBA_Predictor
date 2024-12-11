@@ -1,0 +1,56 @@
+.nba-landing {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    color: #333;
+  }
+  
+  .nba-landing h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .intro {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+  }
+  
+  .featured-pick, .record-summary {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    background-color: #f9f9f9;
+  }
+  
+  .featured-pick h2, .record-summary h2 {
+    font-size: 1.5rem;
+    color: #0056b3;
+  }
+  
+  .links {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .links a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  .links a:hover {
+    text-decoration: underline;
+  }
+  
+  .disclaimer {
+    font-size: 0.9rem;
+    color: #777;
+    margin-top: 2rem;
+  }
+  

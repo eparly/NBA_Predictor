@@ -24,35 +24,53 @@ class RecordService:
         print('correct', correct)
         print('games', games)
         if games == 0:
+            score = {
+                #todo: don't hardcode dates
+                "date": self.str_date,
+                "type-gameId": "record",
+                "today": {
+                    "correct": 0,
+                    "total": 0,
+                    "percentage": '0.0',
+                    "units": '0.0'
+                },
+                "allTime": {
+                    "correct": all_time["correct"]+ correct,
+                    "total": all_time['total']+ games,
+                    "percentage": str(round((all_time["correct"]+ correct)/(all_time['total']+ games), 4)),
+                    "units": str(float(all_time['units']) + units)
+                } 
+            }
             print('no games yesterday')
             return
         
-        units = self.calculate_units(predictions, results, odds)
+        else:
+            units = self.calculate_units(predictions, results, odds)
 
-        #todo: add support for multiple models
-        all_time = yesterdayRecord.get('allTime', {
-            "correct": 0,
-            "total": 0,
-            "percentage": "0.0",
-            "units": "0.0"
-        })
-        score = {
-            #todo: don't hardcode dates
-            "date": self.str_date,
-            "type-gameId": "record",
-            "today": {
-                "correct": correct,
-                "total": games,
-                "percentage": str(round(correct/games, 4)),
-                "units": str(units)
-            },
-            "allTime": {
-                "correct": all_time["correct"]+ correct,
-                "total": all_time['total']+ games,
-                "percentage": str(round((all_time["correct"]+ correct)/(all_time['total']+ games), 4)),
-                "units": str(float(all_time['units']) + units)
-            } 
-        }
+            #todo: add support for multiple models
+            all_time = yesterdayRecord.get('allTime', {
+                "correct": 0,
+                "total": 0,
+                "percentage": "0.0",
+                "units": "0.0"
+            })
+            score = {
+                #todo: don't hardcode dates
+                "date": self.str_date,
+                "type-gameId": "record",
+                "today": {
+                    "correct": correct,
+                    "total": games,
+                    "percentage": str(round(correct/games, 4)),
+                    "units": str(units)
+                },
+                "allTime": {
+                    "correct": all_time["correct"]+ correct,
+                    "total": all_time['total']+ games,
+                    "percentage": str(round((all_time["correct"]+ correct)/(all_time['total']+ games), 4)),
+                    "units": str(float(all_time['units']) + units)
+                } 
+            }
         print(score)
         self.dynamoDbService.create_item(score)
         return
