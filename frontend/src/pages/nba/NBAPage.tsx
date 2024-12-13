@@ -3,7 +3,7 @@ import NBAPredictionsPage from "./predictions/NbaPredictionsPage";
 import NBARecordPage from "./record/NBARecordPage";
 import NBAResultsPage from "./results/NBAResults";
 import NbaLanding from "./NbaLanding";
-import PicksPage from "./picks/NbaPicksPage";
+import PicksPage from "./picks/NBAPicksPage";
 
 
 function NBAPages() {

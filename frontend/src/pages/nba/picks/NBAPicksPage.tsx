@@ -7,12 +7,9 @@ const PicksPage: React.FC = () => {
     const [picks, setPicks] = useState<any[]>([])
     const [error, setError] = useState<string | null>(null)
 
-    const date = new Intl.DateTimeFormat('en-US', {
+    const date = new Date(new Date().toLocaleDateString('en-US', {
         timeZone: 'America/New_York',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }).format(new Date()).split('/').reverse().join('-')
+    })).toISOString().split('T')[0]
     // const date = '2024-12-07'
 
 

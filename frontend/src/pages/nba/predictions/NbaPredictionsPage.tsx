@@ -27,12 +27,9 @@ const NBAPredictionsPage: React.FC = () => {
     const [error, setError] = React.useState<string | null>(null)
 
   // const date = new Date().toISOString().split('T')[0]
-    const date = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).format(new Date()).split('/').reverse().join('-')
+    const date = new Date(new Date().toLocaleDateString('en-US', {
+        timeZone: 'America/New_York',
+    })).toISOString().split('T')[0]
     console.log(date)
     // const date = '2024-12-11'
 
