@@ -9,4 +9,5 @@ def lambda_handler(event, context):
     dynamoDbService = DynamoDBService(tableName)
     recordService = RecordService(dynamoDbService)
     response = recordService.update_records()
+    # response = recordService.update_picks()
     return response
