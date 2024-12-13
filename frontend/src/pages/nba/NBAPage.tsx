@@ -1,17 +1,19 @@
 import { Route, Routes } from "react-router-dom";
-import NBAPicksPage from "./picks/NBAPicksPage";
+import NBAPredictionsPage from "./predictions/NbaPredictionsPage";
 import NBARecordPage from "./record/NBARecordPage";
 import NBAResultsPage from "./results/NBAResults";
-import NbaLanding from "./NbaLanding"
+import NbaLanding from "./NbaLanding";
+import PicksPage from "./picks/NbaPicksPage";
 
 
 function NBAPages() {
     return (
         <Routes>
             <Route path="/" element={<NbaLanding />} />
-            <Route path="/picks" element={<NBAPicksPage />} />
+            <Route path="/predictions" element={<NBAPredictionsPage />} />
             <Route path="/results" element={<NBAResultsPage />} />
             <Route path="/record" element={<NBARecordPage />} />
+            <Route path="/picks" element={<PicksPage />} />
         </Routes>
     );
 }
