@@ -62,6 +62,7 @@ class PicksService:
                         'implied': str(implied_away),
                         'edge': str(diff_away)
                     }
+                    self.dynamoDbService.create_item(record)
                 else:
                     print('No value on home team', game_id)
             if (homescore < awayscore):
