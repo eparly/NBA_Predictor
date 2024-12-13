@@ -116,7 +116,7 @@ class RecordService:
         
         #todo: Update dates
         # support record and record::value updates in the update records function
-        
+        #add this function to the step functions
         # run this function and picks lambda for all dates that have been missed. Try generating some script or lambda to do it all at once
         picks = self.dynamoDbService.get_items_by_date_and_sort_key_prefix('2024-12-08', 'picks::value')
         results = self.dynamoDbService.get_items_by_date_and_sort_key_prefix('2024-12-08', 'results')
