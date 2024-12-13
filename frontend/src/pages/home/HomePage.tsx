@@ -4,19 +4,6 @@ import './HomePage.css';
 function Home() {
   return (
     <div className="home">
-      {/* Header */}
-      <header className="header">
-        <div className="logo">Ethan Parliament</div>
-        <nav>
-          <ul className="nav-links">
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
-            <li><a href="/projects">Projects</a></li>
-            <li><a href="/contact">Contact</a></li>
-          </ul>
-        </nav>
-      </header>
-
       {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
@@ -27,7 +14,7 @@ function Home() {
                 <p>
                     I've written and presented multiple research papers on hockey analytics through LINHAC - check them out on my projects page!
                   </p>
-                  <a href="projects/hockey" className="cta-button">Hockey Analytics</a>
+                  <a href="/hockey" className="cta-button">Hockey Analytics</a>
                 <p>
                     I'm also a big fan of the NBA and have created different analytical models used to predict the winner of NBA games. You can check out my picks daily and track my progress on my NBA page! 
                   </p>

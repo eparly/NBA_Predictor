@@ -44,7 +44,8 @@ const NbaLanding: React.FC = () => {
 
       {/* Navigation Links */}
       <div className="links">
-        <a href="/nba/predictions">Daily Picks</a>
+        <a href="/nba/predictions">Daily Predictions</a>
+        <a href="/nba/picks">Daily Picks</a>
         <a href="/nba/results">Results</a>
         <a href="/nba/record">Record</a>
       </div>
