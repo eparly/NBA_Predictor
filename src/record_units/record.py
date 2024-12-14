@@ -118,10 +118,11 @@ class RecordService:
         # support record and record::value updates in the update records function
         #add this function to the step functions
         # run this function and picks lambda for all dates that have been missed. Try generating some script or lambda to do it all at once
-        picks = self.dynamoDbService.get_items_by_date_and_sort_key_prefix('2024-12-08', 'picks::value')
-        results = self.dynamoDbService.get_items_by_date_and_sort_key_prefix('2024-12-08', 'results')
-        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_sort_key_prefix('2024-12-08', 'record::value')
+        picks = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'picks::value')
+        results = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'results')
+        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'record::value')
 
+        yesterdayRecord = yesterdayRecord[0] if yesterdayRecord else {}
         print('yesterdayRecord', yesterdayRecord)
         all_time = yesterdayRecord.get('allTime', {
                 "correct": 0,
@@ -129,9 +130,10 @@ class RecordService:
                 "percentage": "0.0",
                 "units": "0.0"
         })
+        print('all_time', all_time)
         if (len(picks) == 0):
             score = {
-                "date": '2024-12-09',
+                "date": self.date,
                 "type-gameId": "record::value",
                 "today": {
                     "correct": 0,
@@ -148,7 +150,7 @@ class RecordService:
             print('correct', correct)
             score = {
                 #todo: don't hardcode dates
-                "date": '2024-12-09',
+                "date": self.date,
                 "type-gameId": "record::value",
                 "today": {
                     "correct": correct,
@@ -189,5 +191,27 @@ class RecordService:
         print('units', units)
         return round(units, 3) , correct
 
-    #todo: add support for multiple models
+    # functions used to get pick records from previous days
+    def generate_date_range(self, start_date: str, end_date: str):
+        start = datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.strptime(end_date, '%Y-%m-%d')
+        delta = timedelta(days=1)
+        current = start
+        dates = []
+        while current <= end:
+            dates.append(current.strftime('%Y-%m-%d'))
+            current += delta
+        return dates
+    
+    def run_for_date(self, date: str):
+        eastern = dateutil.tz.gettz('US/Eastern')
+        self.date = datetime.strptime(date, '%Y-%m-%d').replace(tzinfo=eastern).strftime('%Y-%m-%d')
+        self.yesterday = (datetime.strptime(date, '%Y-%m-%d') - timedelta(1)).strftime('%Y-%m-%d')
+        self.update_picks()
+    
+    def run_picks_service_for_date_range(self, start_date: str, end_date: str):
+        dates = self.generate_date_range(start_date, end_date)
+        for date in dates:
+            print('running for date', date)
+            self.run_for_date(date)      
    
