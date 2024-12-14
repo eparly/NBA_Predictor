@@ -15,7 +15,7 @@ export type DynamoDBRecords = {
     }
 }
 
-export type RecordsResponse = {
+export type SingleRecordResponse = {
     date: string;
     allTime: {
         correct: number;
@@ -29,4 +29,15 @@ export type RecordsResponse = {
         total: number;
         units: number;
     }
+}
+
+export type RecordsResponse = {
+    preds?: SingleRecordResponse[];
+    picks?: SingleRecordResponse[];
+}
+
+export enum RecordType {
+    preds = 'preds',
+    value = 'value',
+    all = 'all'
 }
