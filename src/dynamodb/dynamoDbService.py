@@ -64,6 +64,19 @@ class DynamoDBService:
         except ClientError as e:
             print(f"Error querying items: {e}")
             return []
+        
+    def get_items_by_date_and_exact_sort_key(self, date, sort_key):
+        try:
+            response = self.table.query(
+                KeyConditionExpression=Key('date').eq(date) & Key('type-gameId').eq(sort_key)
+            )
+            return response.get('Items', [])
+        except NoCredentialsError:
+            print("Credentials not available")
+            return []
+        except ClientError as e:
+            print(f"Error querying items: {e}")
+            return []
     
     def get_most_recent_record(self, record_type):
         try:

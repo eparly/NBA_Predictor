@@ -8,6 +8,5 @@ bucketName = os.getenv('bucketName')
 def lambda_handler(event, context):
     dynamoDbService = DynamoDBService(tableName)
     recordService = RecordService(dynamoDbService)
-    response = recordService.update_records()
-    # response = recordService.update_picks()
+    response = recordService.update_all_records()
     return response

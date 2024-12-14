@@ -12,11 +12,18 @@ class RecordService:
         self.str_date = date.strftime('%Y-%m-%d')
         self.yesterday = (date - timedelta(1)).strftime('%Y-%m-%d')
     
+    def update_all_records(self):
+        results, _ = self.dynamoDbService.get_all_recent_records('results')
+        self.update_records(results)
+        self.update_picks(results)
         
-    def update_records(self): 
-        results, most_recent_date = self.dynamoDbService.get_all_recent_records('results')
+        return
+
+        
+        
+    def update_records(self, results): 
         predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'predictions')
-        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'record')
+        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_exact_sort_key(self.yesterday, 'record')
         odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'odds')
         
         yesterdayRecord = yesterdayRecord[0] if yesterdayRecord else {}
@@ -109,28 +116,17 @@ class RecordService:
         units_won -= len(game_ids_with_odds)
         return round(units_won, 3)
     
-    def update_picks(self):
-        # picks = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'picks::value')
-        # results = self.dynamoDbService.get_all_recent_records('results')
-        
-        
-        #todo: Update dates
-        # support record and record::value updates in the update records function
-        #add this function to the step functions
-        # run this function and picks lambda for all dates that have been missed. Try generating some script or lambda to do it all at once
+    def update_picks(self, results):
         picks = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'picks::value')
-        results = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'results')
-        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'record::value')
+        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_exact_sort_key(self.yesterday, 'record::value')
 
         yesterdayRecord = yesterdayRecord[0] if yesterdayRecord else {}
-        print('yesterdayRecord', yesterdayRecord)
         all_time = yesterdayRecord.get('allTime', {
                 "correct": 0,
                 "total": 0,
                 "percentage": "0.0",
                 "units": "0.0"
         })
-        print('all_time', all_time)
         if (len(picks) == 0):
             score = {
                 "date": self.date,
