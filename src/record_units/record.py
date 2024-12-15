@@ -129,7 +129,7 @@ class RecordService:
         })
         if (len(picks) == 0):
             score = {
-                "date": self.date,
+                "date": self.str_date,
                 "type-gameId": "record::value",
                 "today": {
                     "correct": 0,
@@ -146,7 +146,7 @@ class RecordService:
             print('correct', correct)
             score = {
                 #todo: don't hardcode dates
-                "date": self.date,
+                "date": self.str_date,
                 "type-gameId": "record::value",
                 "today": {
                     "correct": correct,
