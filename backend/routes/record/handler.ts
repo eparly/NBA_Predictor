@@ -2,6 +2,7 @@ import { APIGatewayProxyHandler } from 'aws-lambda';
 
 import { DynamoDBService } from "../../dynamodb/DynamoDBService";
 import { RecordController } from "./controller";
+import { RecordType } from './types';
 
 export const handler: APIGatewayProxyHandler = async (event, context) => {
     const tableName = process.env.TABLE_NAME;
@@ -20,13 +21,14 @@ export const handler: APIGatewayProxyHandler = async (event, context) => {
     const controller = new RecordController(dynamoDbService);
 
     try {
-        const records = await controller.getRecords();
-
-        if (!records.length) {
+        const queryType = event.queryStringParameters?.type as RecordType;
+        const records = await controller.getRecords(queryType);
+        console.log('Records:', records);
+        if (!records) {
             return {
                 statusCode: 404,
                 body: JSON.stringify({
-                    message: 'No records found for the given date',
+                    message: 'No records found',
                 }),
             };
         }

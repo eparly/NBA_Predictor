@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import dateutil
 from dynamodb.dynamoDbService import DynamoDBService
 
@@ -62,6 +62,7 @@ class PicksService:
                         'implied': str(implied_away),
                         'edge': str(diff_away)
                     }
+                    self.dynamoDbService.create_item(record)
                 else:
                     print('No value on home team', game_id)
             if (homescore < awayscore):
@@ -109,7 +110,30 @@ class PicksService:
                 else:
                     print('No value on away team', game_id)
         return
-                
+    
+    
+    # functions used to generate picks from previous days
+    def generate_date_range(self, start_date: str, end_date: str):
+        start = datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.strptime(end_date, '%Y-%m-%d')
+        delta = timedelta(days=1)
+        current = start
+        dates = []
+        while current <= end:
+            dates.append(current.strftime('%Y-%m-%d'))
+            current += delta
+        return dates
+    
+    def run_for_date(self, date: str):
+        eastern = dateutil.tz.gettz('US/Eastern')
+        self.date = datetime.strptime(date, '%Y-%m-%d').replace(tzinfo=eastern).strftime('%Y-%m-%d')
+        self.value_picks()
+    
+    def run_picks_service_for_date_range(self, start_date: str, end_date: str):
+        dates = self.generate_date_range(start_date, end_date)
+        for date in dates:
+            print('running for date', date)
+            self.run_for_date(date)      
                 
                 
                 

@@ -12,11 +12,18 @@ class RecordService:
         self.str_date = date.strftime('%Y-%m-%d')
         self.yesterday = (date - timedelta(1)).strftime('%Y-%m-%d')
     
+    def update_all_records(self):
+        results, _ = self.dynamoDbService.get_all_recent_records('results')
+        self.update_records(results)
+        self.update_picks(results)
         
-    def update_records(self): 
-        results, most_recent_date = self.dynamoDbService.get_all_recent_records('results')
+        return
+
+        
+        
+    def update_records(self, results): 
         predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'predictions')
-        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'record')
+        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_exact_sort_key(self.yesterday, 'record')
         odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'odds')
         
         yesterdayRecord = yesterdayRecord[0] if yesterdayRecord else {}
@@ -108,6 +115,99 @@ class RecordService:
                     units_won += float(single_game_odds['away_ml'])
         units_won -= len(game_ids_with_odds)
         return round(units_won, 3)
+    
+    def update_picks(self, results):
+        picks = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'picks::value')
+        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_exact_sort_key(self.yesterday, 'record::value')
 
-    #todo: add support for multiple models
+        yesterdayRecord = yesterdayRecord[0] if yesterdayRecord else {}
+        all_time = yesterdayRecord.get('allTime', {
+                "correct": 0,
+                "total": 0,
+                "percentage": "0.0",
+                "units": "0.0"
+        })
+        if (len(picks) == 0):
+            score = {
+                "date": self.str_date,
+                "type-gameId": "record::value",
+                "today": {
+                    "correct": 0,
+                    "total": 0,
+                    "percentage": '0.0',
+                    "units": '0.0'
+                },
+                "allTime": all_time
+            }
+            print('no games yesterday')
+        else:
+            units, correct = self.calculate_picks_units(picks, results)
+            print('units', units)
+            print('correct', correct)
+            score = {
+                #todo: don't hardcode dates
+                "date": self.str_date,
+                "type-gameId": "record::value",
+                "today": {
+                    "correct": correct,
+                    "total": len(picks),
+                    "percentage": str(round(correct/len(picks), 4)),
+                    "units": str(units)
+                },
+                "allTime": {
+                    "correct": all_time["correct"] + correct,
+                    "total": all_time['total']+ len(picks),
+                    "percentage": str(round((all_time["correct"]+ correct)/(all_time['total']+ len(picks)), 4)),
+                    "units": str(float(all_time['units']) + units)
+                } 
+            }
+        print(score)
+        self.dynamoDbService.create_item(score)
+        return
+    
+    def calculate_picks_units(self, picks, results):
+        results_game_ids = [x['type-gameId'].split('::')[-1] for x in results]
+        picks_game_ids = [x['type-gameId'].split('::')[-1] for x in picks]
+        units = 0
+        correct = 0
+        
+        results_with_picks = [x for x in results_game_ids if x in picks_game_ids]
+        
+        for i in results_with_picks:
+            pick = [x for x in picks if x['type-gameId'].split('::')[-1] == i][0]
+            result =  [x for x in results if x['type-gameId'].split('::')[-1] == i][0]
+            actual_winner = get_winner(result)
+            predicted_winner = pick['pick']
+            predicted_winner = 'home' if predicted_winner == result['hometeam'] else 'away'
+            
+            if predicted_winner == actual_winner:
+                correct += 1
+                units += float(pick['actual'])
+        units -= len(results_with_picks)
+        print('units', units)
+        return round(units, 3) , correct
+
+    # functions used to get pick records from previous days
+    def generate_date_range(self, start_date: str, end_date: str):
+        start = datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.strptime(end_date, '%Y-%m-%d')
+        delta = timedelta(days=1)
+        current = start
+        dates = []
+        while current <= end:
+            dates.append(current.strftime('%Y-%m-%d'))
+            current += delta
+        return dates
+    
+    def run_for_date(self, date: str):
+        eastern = dateutil.tz.gettz('US/Eastern')
+        self.date = datetime.strptime(date, '%Y-%m-%d').replace(tzinfo=eastern).strftime('%Y-%m-%d')
+        self.yesterday = (datetime.strptime(date, '%Y-%m-%d') - timedelta(1)).strftime('%Y-%m-%d')
+        self.update_picks()
+    
+    def run_picks_service_for_date_range(self, start_date: str, end_date: str):
+        dates = self.generate_date_range(start_date, end_date)
+        for date in dates:
+            print('running for date', date)
+            self.run_for_date(date)      
    

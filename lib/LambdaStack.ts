@@ -180,7 +180,11 @@ export class LambdaStack extends Stack {
         })
 
         const waitBeforeOddsTask = new Wait(this, 'Wait Before Odds', {
-            time: WaitTime.duration(Duration.minutes(30)),
+            time: WaitTime.duration(Duration.minutes(15)),
+        })
+
+        const picksTask = new LambdaInvoke(this, 'Invoke Picks Lambda', {
+            lambdaFunction: this.picksLambda,
         })
     
         // Define the state machine
@@ -190,7 +194,7 @@ export class LambdaStack extends Stack {
             .next(waitTask)
             .next(checkQueueTask)
             .next(choiceState
-                .when(queueEmptyCondition, waitBeforeOddsTask.next(oddsTask))
+                .when(queueEmptyCondition, waitBeforeOddsTask.next(oddsTask.next(picksTask)))
                 .otherwise(waitTask))
 
     

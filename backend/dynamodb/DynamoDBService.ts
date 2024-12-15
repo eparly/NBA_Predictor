@@ -80,7 +80,7 @@ export class DynamoDBService {
     public async getAllRecords(): Promise<QueryOutput> {
         const params = {
             TableName: this.tableName,
-            FilterExpression: 'begins_with(#typeGameId, :record)',
+            FilterExpression: '#typeGameId = :record',
             ExpressionAttributeNames: {
                 '#typeGameId': 'type-gameId',
             },
@@ -88,6 +88,24 @@ export class DynamoDBService {
                 ':record': 'record',
             },
         };
+        const result = await this.dynamoDb.scan(params).promise();
+        result.Items = result.Items?.sort((a, b) => (a.date < b.date ? 1 : -1));
+
+        return result;
+    }
+
+    public async getAllPicksRecord(type: string): Promise<QueryOutput> {
+        const params = {
+            TableName: this.tableName,
+            FilterExpression: '#typeGameId = :valuePicksRecord',
+            ExpressionAttributeNames: {
+                '#typeGameId': 'type-gameId',
+            },
+            ExpressionAttributeValues: {
+                ':valuePicksRecord': `record::${type}`,
+            },
+        };
+
         const result = await this.dynamoDb.scan(params).promise();
         result.Items = result.Items?.sort((a, b) => (a.date < b.date ? 1 : -1));
 
