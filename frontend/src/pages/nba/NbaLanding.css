@@ -1,0 +1,139 @@
+.nba-landing {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  color: #ffffff; /* Dark gray text for readability */
+}
+
+.nba-landing h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #0346aa; /* Pure blue text */
+}
+
+.intro {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+  color: #333; /* Dark gray text */
+}
+
+.featured-pick {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  background-color: #f9f9f9; /* Light gray background */
+  text-align: center;
+}
+
+.featured-pick h2 {
+  font-size: 1.8rem;
+  color: #0346aa; /* Pure blue text */
+  margin-bottom: 1rem;
+}
+
+.featured-pick-card {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.featured-pick-card p {
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+  color: #333; /* Dark gray text */
+}
+
+.featured-pick-card strong {
+  font-weight: bold;
+  color: #0346aa; /* Pure blue */
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.links a {
+  color: #0346aa; /* Pure blue text */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.links a:hover {
+  color: #3e7bff; /* Light blue on hover */
+  text-decoration: underline;
+}
+
+.disclaimer {
+  font-size: 0.9rem;
+  color: #777; /* Light gray text */
+  margin-top: 2rem;
+}
+
+.game-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 20px;
+}
+
+.game-card {
+  width: 100%;
+  max-width: 600px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #ffffff; /* White background */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.game-card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: #333; /* Dark gray text */
+  text-align: center;
+}
+
+.teams {
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: row;
+  color: #333;
+}
+
+.team {
+  font-weight: bold;
+}
+
+.predictions,
+.odds {
+  margin: 10px 0;
+  text-align: left;
+}
+
+.predictions p,
+.odds p {
+  flex-direction: column;
+  text-align: center;
+  margin: 5px 0;
+  color: #333; /* Dark gray text */
+}
+
+strong {
+  color: #0346aa; /* Pure blue */
+}
+
+.record-summary {
+  color: #333; /* White text for record summary */
+}

@@ -58,7 +58,6 @@ class RecordService:
             units = self.calculate_units(predictions, results, odds)
 
             score = {
-                #todo: don't hardcode dates
                 "date": self.str_date,
                 "type-gameId": "record",
                 "today": {
