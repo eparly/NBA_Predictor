@@ -3,15 +3,16 @@ import './NbaLanding.css';
 import { getData } from '../../services/apiService';
 
 const NbaLanding: React.FC = () => {
-  const [recordSummary, setRecordSummary] = React.useState<any>({})
+  const [predictionRecordSummary, setPredictionRecordSummary] = React.useState<any>({})
+  const [picksRecordSummary, setPicksRecordSummary] = React.useState<any>({})
   const [error, setError] = React.useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result = await getData('/record')
-        setRecordSummary(result[0])
-        console.log('recordSummary: ', recordSummary)
+        const result = await getData('/record?type=all')
+        setPredictionRecordSummary(result.preds[0])
+        setPicksRecordSummary(result.picks[0])
       } catch (error) {
         console.log('Error fetching data: ', error)
         setError('Error fetching data')
@@ -33,11 +34,16 @@ const NbaLanding: React.FC = () => {
       </p>
       
       {/* Record Summary Section */}
-      {recordSummary.allTime ? (
+      {predictionRecordSummary.allTime ? (
         <div className="record-summary">
-          <h2>Season Record</h2>
-          <p>Wins: {recordSummary.allTime.correct} | Losses: {recordSummary.allTime.total - recordSummary.allTime.correct}</p>
-          <p>Winning Percentage: {(recordSummary.allTime.percentage * 100).toFixed(1)}%</p>
+          <h2>Season Record - Predictions</h2>
+          <p>Wins: {predictionRecordSummary.allTime.correct} | Losses: {predictionRecordSummary.allTime.total - predictionRecordSummary.allTime.correct}</p>
+          <p>Winning Percentage: {(predictionRecordSummary.allTime.percentage * 100).toFixed(1)}%</p>
+          <p>Units: {(predictionRecordSummary.allTime.units).toFixed(2)}</p>
+          <h2>Season Record - Picks</h2>
+          <p>Wins: {picksRecordSummary.allTime.correct} | Losses: {picksRecordSummary.allTime.total - picksRecordSummary.allTime.correct}</p>
+          <p>Winning Percentage: {(picksRecordSummary.allTime.percentage * 100).toFixed(1)}%</p>
+          <p>Units: {(picksRecordSummary.allTime.units).toFixed(2)}</p>
         </div>
         ): <p>Loading...</p>}
       

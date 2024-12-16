@@ -26,12 +26,10 @@ const NBAPredictionsPage: React.FC = () => {
     const [loading, setLoading] = React.useState<boolean>(true)
     const [error, setError] = React.useState<string | null>(null)
 
-  // const date = new Date().toISOString().split('T')[0]
     const date = new Date(new Date().toLocaleDateString('en-US', {
         timeZone: 'America/New_York',
     })).toISOString().split('T')[0]
     console.log(date)
-    // const date = '2024-12-11'
 
     useEffect(() => {
         const fetchData = async () => {
@@ -49,9 +47,14 @@ const NBAPredictionsPage: React.FC = () => {
       fetchData()
   }, [])
 
-    if (error) {
-        return <div>Error: {error}</div>
-    }
+  if (error) {
+    return (
+        <div className="error-card">
+            <h2>No Predictions Available</h2>
+            <p>There are currently no predictions for today. Predictions are generated around 9:00 AM each day.</p>
+        </div>
+    )
+  }
     if (!predictions) {
         return <div>Loading...</div>
     }
