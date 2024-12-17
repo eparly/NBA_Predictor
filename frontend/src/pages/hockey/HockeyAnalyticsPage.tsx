@@ -29,7 +29,7 @@ const HockeyAnalyticsPage: React.FC = () => {
         <div className="hockey-analytics-container">
             <h1>Hockey Analytics</h1>
             <p className="intro">
-                I've written and presented multiple research papers on hockey analytics through Linköping Hockey Analytics Conference (LINHAC). Check them out below!
+                I've written and presented multiple research papers on hockey analytics through Linköping Hockey Analytics Conference (LINHAC). Check them out below, click to read the paper!
             </p>
             <div className="papers-list">
                 {papers.map((paper, index) => (
