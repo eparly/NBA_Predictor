@@ -23,7 +23,6 @@ export interface GameData {
 
 const NBAPredictionsPage: React.FC = () => {
     const [predictions, setPredictions] = React.useState<any[]>([])
-    const [loading, setLoading] = React.useState<boolean>(true)
     const [error, setError] = React.useState<string | null>(null)
 
     const date = new Date(new Date().toLocaleDateString('en-US', {
@@ -45,7 +44,7 @@ const NBAPredictionsPage: React.FC = () => {
           }
       }
       fetchData()
-  }, [])
+  }, [date])
 
   if (error) {
     return (
@@ -76,7 +75,7 @@ interface GameCardProps {
 }
 
 export const GameCard: React.FC<GameCardProps> = ({ game }) => {
-    const { date, homeTeam, awayTeam, predictions, odds } = game;
+    const { homeTeam, awayTeam, predictions, odds } = game;
 
     const homeTeamColour = teamColours[homeTeam]
     const awayTeamColour = teamColours[awayTeam]

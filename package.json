@@ -16,17 +16,16 @@
     "@types/node": "latest",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
+    "esbuild": "^0.24.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "prettier": "^3.3.3",
-    "typescript": "^5.6.3",
-    "esbuild": "^0.24.0"
+    "typescript": "^5.6.3"
   },
   "dependencies": {
     "@aws-cdk/aws-lambda-nodejs": "^1.203.0",
     "aws-cdk-lib": "^2.80.0",
-    "constructs": "^10.1.0",
-    "aws-sdk": "^2.1692.0"
+    "aws-sdk": "^2.1692.0",
+    "constructs": "^10.1.0"
   }
 }
-
