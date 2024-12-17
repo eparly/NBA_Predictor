@@ -1,45 +1,34 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { getData } from "../../../services/apiService"
 import PickCard from "./PickCard"
 import './PicksPage.css'
+import DateNavigator from "../../../components/DateNavigator/DateNavigator"
 
 const PicksPage: React.FC = () => {
     const [picks, setPicks] = useState<any[]>([])
     const [error, setError] = useState<string | null>(null)
-
-    const date = new Date(new Date().toLocaleDateString('en-US', {
+    const [selectedDate, setSelectedDate] = React.useState<Date>(new Date(new Date().toLocaleDateString('en-US', {
         timeZone: 'America/New_York',
-    })).toISOString().split('T')[0]
-    // const date = '2024-12-07'
+    })))
 
 
     useEffect(() => {
         const fetchData = async () => {
             try {
+                const date = selectedDate.toISOString().split('T')[0]
                 const result = await getData(`/picks/value/${date}`)
                 if (result.length === 0) {
                     throw new Error('No picks available for today')
                 }
                 setPicks(result)
+                setError(null)
             } catch (error: any) {
                 // console.log('Error fetching data: ', error)
                 setError(error.message || "An unexpected error occurred")
             }
         }
         fetchData()
-    }, [date])
-
-    if (error) {
-        return (
-            <div className="error-card">
-                <h2>No Picks Available</h2>
-                <p>There are currently no picks for today. Picks are generated around 9:00 AM each day. Due to the way picks are generated, there may not be any picks for the NBA games today</p>
-            </div>
-        )
-    }
-    if (!picks) {
-        return <div>Loading...</div>
-    }
+    }, [selectedDate])
     return (
         <div className="picks-page">
             <h1>NBA Picks</h1>
@@ -49,11 +38,21 @@ const PicksPage: React.FC = () => {
                 These picks may not match up with the predictions exactly,
                 but are designed to maximize the value of each pick.
             </p>
-            <div className="picks-grid">
-                {picks.map((pick) => (
-                    <PickCard key={pick.gameId} pickData={pick} />
-                ))}
-            </div>
+            <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+            {!error && picks.length > 0 ? (
+                <div className="picks-grid">
+                    {picks.map((pick) => (
+                        <PickCard key={pick.gameId} pickData={pick} />
+                    ))}
+                </div>
+            ) : (
+           
+                    <div className="error-card">
+                        <h2>No Picks Available</h2>
+                        <p>There are currently no picks for today. Picks are generated around 9:00 AM each day. Due to the way picks are generated, there may not be any picks for the NBA games today</p>
+                    </div>
+                )
+            }
         </div>
     )
 }

@@ -34,7 +34,7 @@ const WinPercentageChart: React.FC<ChartProps> = ({ data }) => {
     }))
     return (
         <div style={{ width: "100%", height: 500 }}>
-            <h2 style={{ textAlign: "center" }}>Win Percentage</h2>
+            <h2 style={{ textAlign: "center", marginTop: '40px' }}>Win Percentage</h2>
             <ResponsiveContainer width="95%" height="100%">
                 <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />

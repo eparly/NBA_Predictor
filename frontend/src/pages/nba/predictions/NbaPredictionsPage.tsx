@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { getData } from '../../../services/apiService'
 import teamColours from '../../../utils/teamColours'
 import './../NbaLanding.css'
-
+import DateNavigator from '../../../components/DateNavigator/DateNavigator'
 export interface GameData {
     date: string;
     gameId: number;
@@ -22,52 +22,46 @@ export interface GameData {
   
 
 const NBAPredictionsPage: React.FC = () => {
-    const [predictions, setPredictions] = React.useState<any[]>([])
-    const [error, setError] = React.useState<string | null>(null)
+  const [predictions, setPredictions] = React.useState<any[]>([])
+  const [error, setError] = React.useState<string | null>(null)
+  const [selectedDate, setSelectedDate] = React.useState<Date>(new Date(new Date().toLocaleDateString('en-US', {
+    timeZone: 'America/New_York',
+  })))
 
-    const date = new Date(new Date().toLocaleDateString('en-US', {
-        timeZone: 'America/New_York',
-    })).toISOString().split('T')[0]
-    console.log(date)
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const result = await getData(`/predictions/${date}`)
-                if (result.length === 0) {
-                  throw new Error('No picks available for today')
-              }
-              setPredictions(result)
-          } catch (error: any) {
-              // console.log('Error fetching data: ', error)
-              setError(error.message || "An unexpected error occurred")
-          }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const date = selectedDate.toISOString().split('T')[0]
+        const result = await getData(`/predictions/${date}`)
+        if (result.length === 0) {
+          throw new Error('No picks available for today')
+        }
+        setPredictions(result)
+        setError(null)
+      } catch (error: any) {
+        setError(error.message || "An unexpected error occurred")
       }
-      fetchData()
-  }, [date])
-
-  if (error) {
-    return (
-        <div className="error-card">
-            <h2>No Predictions Available</h2>
-            <p>There are currently no predictions for today. Predictions are generated around 9:00 AM each day.</p>
-        </div>
-    )
-  }
-    if (!predictions) {
-        return <div>Loading...</div>
     }
+    fetchData()
+  }, [selectedDate])
 
-    return (
-        <div className='nba-landing'>
-            <h1>NBA Predictions Page</h1>
-            <div className="game-cards">
-                {predictions.map((game: GameData) => (
-                    <GameCard key={game.gameId} game={game} />
-                ))}
-            </div>
-        </div>
-    )
+  return (
+    <div className='nba-landing'>
+      <h1>NBA Predictions Page</h1>
+      <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+      <div className="game-card-container">
+        {!error && predictions.length > 0 ? (
+          predictions.map((game: GameData) => <GameCard key={game.gameId} game={game} />)
+        ) : (
+          <div className="error-card">
+          <h2>No Predictions Available</h2>
+          <p>There are currently no predictions for today. Predictions are generated around 9:00 AM each day.</p>
+      </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 interface GameCardProps {

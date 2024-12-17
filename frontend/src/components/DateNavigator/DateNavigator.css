@@ -1,0 +1,103 @@
+/* DatePicker Input Field */
+.custom-date-picker {
+    width: 150x;
+    padding: 8px 10px;
+    border: 2px solid #000; /* Match your chart colors */
+    border-radius: 8px;
+    font-size: 16px;
+    color: #333;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  
+  .custom-date-picker:focus {
+    border-color: #3e7bff; /* Highlight color on focus */
+  }
+  
+  /* DatePicker Calendar */
+  .custom-calendar {
+    font-family: "Arial, sans-serif";
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid #ddd;
+  }
+  
+  /* Calendar Header */
+  .custom-calendar .react-datepicker__header {
+    background-color: #3e7bff; /* Match chart color */
+    color: #fff;
+    border-bottom: none;
+    padding: 8px 0;
+  }
+  
+  /* Calendar Day */
+  .custom-calendar .react-datepicker__day {
+    color: #333;
+    margin: 4px;
+  }
+  
+  .custom-calendar .react-datepicker__day:hover {
+    background-color: #3e7bff; /* Highlight on hover */
+    color: white;
+    border-radius: 50%;
+  }
+  
+  /* Selected Day */
+  .custom-calendar .react-datepicker__day--selected {
+    background-color: #3e7bff;
+    color: white;
+    border-radius: 50%;
+  }
+  
+  /* Navigation Buttons */
+  .custom-calendar .react-datepicker__navigation {
+    top: 8px;
+  }
+
+  .date-navigator-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px; /* Spacing between elements */
+    margin: 20px 0;
+  }
+  
+  /* Navigation Buttons */
+  .nav-button {
+    background-color: #0346aa; /* Primary color */
+    color: #fff; /* White text */
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+  }
+  
+  .nav-button:hover {
+    background-color: #3e7bff; /* Hover color */
+    transform: scale(1.05);
+  }
+  
+  .nav-button:disabled {
+    background-color: #ccc; /* Disabled state */
+    cursor: not-allowed;
+  }
+  
+  /* DatePicker Input */
+  .custom-date-picker {
+    width: 150px;
+    padding: 8px 10px;
+    border: 2px solid #3e7bff;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #333;
+    outline: none;
+    text-align: center;
+    transition: border-color 0.3s ease;
+  }
+  
+  .custom-date-picker:focus {
+    border-color: #3e7bff;
+  }
+  

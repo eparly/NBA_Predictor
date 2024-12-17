@@ -33,7 +33,7 @@ const UnitsChart: React.FC<ChartProps> = ({ data }) => {
         picksUnits: (sortedPicks[index]?.allTime.units).toFixed(2)|| 0,
     }))
     return (
-        <div style={{ width: "100%", height: 500, marginTop: '50px' }}>
+        <div style={{ width: "100%", height: 500, marginTop: '30px' }}>
             <h2 style={{ textAlign: "center" }}>Units Won</h2>
             <ResponsiveContainer width="95%" height="100%">
                 <LineChart data={chartData}>

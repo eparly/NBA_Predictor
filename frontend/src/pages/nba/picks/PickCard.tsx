@@ -19,7 +19,6 @@ interface PickCardProps {
 
 const PickCard: React.FC<PickCardProps> = ({ pickData }) => {
     const { hometeam, awayTeam, actualOdds, pick } = pickData;
-    console.log(pick)
 
     const homeColour = teamColours[hometeam] || '#ccc';
     const awayColour = teamColours[awayTeam] || '#ccc';
