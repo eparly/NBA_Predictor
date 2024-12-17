@@ -56,11 +56,6 @@ const NbaLanding: React.FC = () => {
           <WinPercentageChart data={record} />
         </div>
         ): <p>Loading...</p>}
-
-      {/* Disclaimer */}
-      <p className="disclaimer">
-        Disclaimer: This information is provided for entertainment purposes only. I am not responsible for any picks you may make. Please play responsibly.
-      </p>
     </div>
   );
 };
