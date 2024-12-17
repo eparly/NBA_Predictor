@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react';
 import './NbaLanding.css';
 import { getData } from '../../services/apiService';
+import WinPercentageChart from '../../components/Chart/WinPercentageChart';
+import UnitsChart from '../../components/Chart/UnitsChart';
 
 const NbaLanding: React.FC = () => {
+  const [record, setRecord] = React.useState<any>({})
   const [predictionRecordSummary, setPredictionRecordSummary] = React.useState<any>({})
   const [picksRecordSummary, setPicksRecordSummary] = React.useState<any>({})
   const [error, setError] = React.useState<string | null>(null)
@@ -11,6 +14,7 @@ const NbaLanding: React.FC = () => {
     const fetchData = async () => {
       try {
         const result = await getData('/record?type=all')
+        setRecord(result)
         setPredictionRecordSummary(result.preds[0])
         setPicksRecordSummary(result.picks[0])
       } catch (error) {
@@ -25,7 +29,7 @@ const NbaLanding: React.FC = () => {
   if (error) {
     return <div>Error: {error}</div>
   }
-
+  console.log(record)
   return (
     <div className="nba-landing">
       <h1>NBA Picks and Records</h1>
@@ -44,6 +48,8 @@ const NbaLanding: React.FC = () => {
           <p>Wins: {picksRecordSummary.allTime.correct} | Losses: {picksRecordSummary.allTime.total - picksRecordSummary.allTime.correct}</p>
           <p>Winning Percentage: {(picksRecordSummary.allTime.percentage * 100).toFixed(1)}%</p>
           <p>Units: {(picksRecordSummary.allTime.units).toFixed(2)}</p>
+          <WinPercentageChart data={record} />
+          <UnitsChart data={record} />
         </div>
         ): <p>Loading...</p>}
       

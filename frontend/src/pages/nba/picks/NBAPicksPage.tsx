@@ -27,7 +27,7 @@ const PicksPage: React.FC = () => {
             }
         }
         fetchData()
-    }, [])
+    }, [date])
 
     if (error) {
         return (
@@ -51,7 +51,6 @@ const PicksPage: React.FC = () => {
             </p>
             <div className="picks-grid">
                 {picks.map((pick) => (
-                    console.log(pick),
                     <PickCard key={pick.gameId} pickData={pick} />
                 ))}
             </div>
