@@ -47,7 +47,7 @@ const UnitsChart: React.FC<ChartProps> = ({ data }) => {
                         }}
                     />
                     <YAxis
-                        domain={[-20, 20]}
+                        domain={[-30, 30]}
                         label={{
                             value: "Units",
                             angle: -90,
