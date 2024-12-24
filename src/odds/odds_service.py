@@ -29,6 +29,7 @@ class OddsService:
             "X-RapidAPI-Host": "sportspage-feeds.p.rapidapi.com"
         }
         response = requests.get(url, headers=headers, params=querystring)
+        # response = self.response
         games = len(response.json()['results'])
         # games from this api arent in the same order as the other one, need to enter these ones in the same order as we do for all predictions
         odds_data = []

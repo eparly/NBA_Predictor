@@ -18,6 +18,6 @@ def lambda_handler(event, context):
                                s3Service = s3Service,
                                dynamoDbService = dynamoDbService)
     response = odds_service.get_odds()
-    # response = odds_service.run_odds_service_for_date_range('2024-12-05', '2024-12-07')
+    # response = odds_service.run_odds_service_for_date_range('2024-12-21', '2024-12-23')
     print(response)
     return response

@@ -12,4 +12,6 @@ def lambda_handler(event, context):
         inverse_edge=4.0,
     )
     response = picks_service.value_picks()
+    # response = picks_service.spread_picks()
+    # response = picks_service.run_picks_service_for_date_range('2024-10-30', '2024-12-23')
     return response
