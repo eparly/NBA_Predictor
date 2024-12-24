@@ -200,9 +200,11 @@ class RecordService:
     
     def run_for_date(self, date: str):
         eastern = dateutil.tz.gettz('US/Eastern')
-        self.date = datetime.strptime(date, '%Y-%m-%d').replace(tzinfo=eastern).strftime('%Y-%m-%d')
+        self.str_date = datetime.strptime(date, '%Y-%m-%d').replace(tzinfo=eastern).strftime('%Y-%m-%d')
         self.yesterday = (datetime.strptime(date, '%Y-%m-%d') - timedelta(1)).strftime('%Y-%m-%d')
-        self.update_picks()
+        print('running for date', self.str_date)
+        print('yesterday', self.yesterday)
+        self.update_all_records()
     
     def run_picks_service_for_date_range(self, start_date: str, end_date: str):
         dates = self.generate_date_range(start_date, end_date)
