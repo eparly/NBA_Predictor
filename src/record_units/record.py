@@ -17,7 +17,8 @@ class RecordService:
         # results = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'results')
         self.update_records(results)
         self.update_picks(results)
-        # self.update_spreads(results)
+        self.update_totals(results)
+        self.update_spreads(results)
         return
 
         
@@ -262,6 +263,80 @@ class RecordService:
                 correct += 1
                 units += float(pick['spreadOdds'])
                 
+        units -= len(results_with_picks)
+        print('units', units)
+        return round(units, 3) , correct
+    
+    def update_totals(self, results):
+        picks = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'picks::total::v2')
+        yesterdayRecord = self.dynamoDbService.get_items_by_date_and_exact_sort_key(self.yesterday, 'record::total::v2')
+
+        yesterdayRecord = yesterdayRecord[0] if yesterdayRecord else {}
+        all_time = yesterdayRecord.get('allTime', {
+                "correct": 0,
+                "total": 0,
+                "percentage": "0.0",
+                "units": "0.0"
+        })
+        if (len(picks) == 0):
+            score = {
+                "date": self.str_date,
+                "type-gameId": "record::total::v2",
+                "today": {
+                    "correct": 0,
+                    "total": 0,
+                    "percentage": '0.0',
+                    "units": '0.0'
+                },
+                "allTime": all_time
+            }
+            print('no games yesterday')
+        else:
+            units, correct = self.calculate_total_units(picks, results)
+            print('units', units)
+            print('correct', correct)
+            score = {
+                "date": self.str_date,
+                "type-gameId": "record::total::v2",
+                "today": {
+                    "correct": correct,
+                    "total": len(picks),
+                    "percentage": str(round(correct/len(picks), 4)),
+                    "units": str(units)
+                },
+                "allTime": {
+                    "correct": all_time["correct"] + correct,
+                    "total": all_time['total']+ len(picks),
+                    "percentage": str(round((all_time["correct"]+ correct)/(all_time['total']+ len(picks)), 4)),
+                    "units": str(float(all_time['units']) + units)
+                }
+            }
+        print(score)
+        self.dynamoDbService.create_item(score)
+        return
+
+    def calculate_total_units(self, picks, results):
+        results_game_ids = [x['type-gameId'].split('::')[-1] for x in results]
+        picks_game_ids = [x['type-gameId'].split('::')[-1] for x in picks]
+        units = 0
+        correct = 0
+        
+        results_with_picks = [x for x in results_game_ids if x in picks_game_ids]
+        
+        for i in results_with_picks:
+            pick = [x for x in picks if x['type-gameId'].split('::')[-1] == i][0]
+            result =  [x for x in results if x['type-gameId'].split('::')[-1] == i][0]
+                        
+            pick_total = float(pick['total'])
+            over_under = pick['pick']
+            actual_total = int(result['homescore']) + int(result['awayscore'])
+            
+            if (actual_total >= pick_total and over_under == 'over'):
+                correct += 1
+                units += float(pick['pickOdds'])
+            elif (actual_total <= pick_total and over_under == 'under'):
+                correct += 1
+                units += float(pick['pickOdds'])
         units -= len(results_with_picks)
         print('units', units)
         return round(units, 3) , correct

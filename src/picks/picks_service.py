@@ -12,9 +12,14 @@ class PicksService:
         eastern = dateutil.tz.gettz('US/Eastern')
         self.date = datetime.now(tz = eastern).strftime('%Y-%m-%d')
         
-    def value_picks(self):
+    def all_picks(self):
         odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.date, 'odds')
         predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.date, 'predictions')
+        self.value_picks(odds, predictions)
+        self.spread_picks(odds, predictions)
+        self.total_picks(odds, predictions)
+        
+    def value_picks(self, odds, predictions):
         
         for pred in predictions:
             game_id = pred['type-gameId'].split('::')[1]
@@ -111,10 +116,8 @@ class PicksService:
                     print('No value on away team', game_id)
         return
     
-    def spread_picks(self):
-        odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.date, 'odds')
-        predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.date, 'predictions')
-        
+    def spread_picks(self, odds, predictions):
+       
         for pred in predictions:
             game_id = pred['type-gameId'].split('::')[1]
             homescore = int(pred['homescore'])
@@ -150,10 +153,7 @@ class PicksService:
                 }
                 self.dynamoDbService.create_item(record)
                 
-    def total_picks(self):
-        predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.date, 'predictions')
-        odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.date, 'odds')
-        
+    def total_picks(self, odds, predictions):
         for pred in predictions:
             game_id = pred['type-gameId'].split('::')[1]
             homescore = int(pred['homescore'])
@@ -162,27 +162,26 @@ class PicksService:
             
             predicted_total = homescore + awayscore
             total = float(game_odds['total'])
-            
-            if (predicted_total > total):
+            if((predicted_total + 3) < total):
+                    record = {
+                        'date': self.date,
+                        'type-gameId': 'picks::total::v2::'+game_id,
+                        'hometeam': pred['hometeam'],
+                        'awayteam': pred['awayteam'],
+                        'total': str(total),
+                        'pick': 'under',
+                        'pickOdds': str(game_odds['totalUnder'])
+                    }
+                    self.dynamoDbService.create_item(record)
+            else:
                 record = {
                     'date': self.date,
-                    'type-gameId': 'picks::total::'+game_id,
+                    'type-gameId': 'picks::total::v2::'+game_id,
                     'hometeam': pred['hometeam'],
                     'awayteam': pred['awayteam'],
                     'total': str(total),
                     'pick': 'over',
                     'pickOdds': str(game_odds['totalOver'])
-                }
-                self.dynamoDbService.create_item(record)
-            else:
-                record = {
-                    'date': self.date,
-                    'type-gameId': 'picks::total::'+game_id,
-                    'hometeam': pred['hometeam'],
-                    'awayteam': pred['awayteam'],
-                    'total': str(total),
-                    'pick': 'under',
-                    'pickOdds': str(game_odds['totalUnder'])
                 }
                 self.dynamoDbService.create_item(record)
                 
@@ -205,8 +204,9 @@ class PicksService:
         eastern = dateutil.tz.gettz('US/Eastern')
         self.date = datetime.strptime(date, '%Y-%m-%d').replace(tzinfo=eastern).strftime('%Y-%m-%d')
         # self.value_picks()
-        self.spread_picks()
-        self.total_picks()
+        # self.spread_picks()
+        # self.total_picks()
+        self.all_picks()
     
     def run_picks_service_for_date_range(self, start_date: str, end_date: str):
         dates = self.generate_date_range(start_date, end_date)

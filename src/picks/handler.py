@@ -11,7 +11,8 @@ def lambda_handler(event, context):
         edge=0.05,
         inverse_edge=4.0,
     )
-    response = picks_service.value_picks()
+    # response = picks_service.value_picks()
     # response = picks_service.spread_picks()
-    # response = picks_service.run_picks_service_for_date_range('2024-10-30', '2024-12-23')
+    # response = picks_service.run_picks_service_for_date_range('2024-10-29', '2024-12-25')
+    response = picks_service.all_picks()
     return response
