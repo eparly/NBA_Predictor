@@ -179,6 +179,10 @@ class RecordService:
             result =  [x for x in results if x['type-gameId'].split('::')[-1] == i][0]
             actual_winner = get_winner(result)
             predicted_winner = pick['pick']
+            if(predicted_winner == 'Los Angeles Clippers'):
+                predicted_winner = 'LA Clippers'
+            if(predicted_winner == 'Los Angeles Lakers'):
+                predicted_winner = 'LA Lakers'
             predicted_winner = 'home' if predicted_winner == result['hometeam'] else 'away'
             
             if predicted_winner == actual_winner:
