@@ -13,7 +13,13 @@ export type DynamoDBOdds = {
     awayteam: string;
     home_ml: string;
     away_ml: string;
-    spread: string;
+    spreadAway: string;
+    spreadHome: string;
+    spreadAwayOdds: string;
+    spreadHomeOdds: string;
+    total: string;
+    totalOver: string;
+    totalUnder: string;
 }
 
 export type PredictionsResponse = {

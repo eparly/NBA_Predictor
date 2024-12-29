@@ -37,7 +37,7 @@ export class PredictionsController {
                     odds: {
                         homeML: Number(item.home_ml),
                         awayML: Number(item.away_ml),
-                        spread: Number(item.spread),
+                        spread: Number(item.spreadHome),
                     }
                 };
             })
