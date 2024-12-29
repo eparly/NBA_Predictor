@@ -1,4 +1,4 @@
-import { DocumentClient, QueryOutput } from "aws-sdk/clients/dynamodb";
+import DynamoDB, { DocumentClient, QueryOutput, ScanOutput } from "aws-sdk/clients/dynamodb";
 
 export class DynamoDBService {
     private readonly dynamoDb: DocumentClient;
@@ -88,10 +88,25 @@ export class DynamoDBService {
                 ':record': 'record',
             },
         };
-        const result = await this.dynamoDb.scan(params).promise();
-        result.Items = result.Items?.sort((a, b) => (a.date < b.date ? 1 : -1));
 
-        return result;
+        let items: DynamoDB.DocumentClient.ItemList = [];
+        let lastEvaluatedKey: DynamoDB.DocumentClient.Key | undefined;
+
+        do {
+            const result: ScanOutput = await this.dynamoDb.scan({
+                ...params,
+                ExclusiveStartKey: lastEvaluatedKey,
+            }).promise();
+
+            if(result.Items) {
+                items = items.concat(result.Items);
+            }
+
+            lastEvaluatedKey = result.LastEvaluatedKey;
+        } while(lastEvaluatedKey);
+        items = items.sort((a, b) => (a.date < b.date ? 1 : -1));
+
+        return { Items: items } as QueryOutput;
     }
 
     public async getAllPicksRecord(type: string): Promise<QueryOutput> {
