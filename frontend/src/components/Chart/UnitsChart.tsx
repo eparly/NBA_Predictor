@@ -30,8 +30,12 @@ const UnitsChart: React.FC<ChartProps> = ({ data }) => {
     const chartData = sortedPreds.map((pred, index) => ({
         date: pred.date,
         predsUnits: (pred.allTime.units).toFixed(2),
-        picksUnits: (sortedPicks[index]?.allTime.units).toFixed(2)|| 0,
+        picksUnits: (sortedPicks[index]?.allTime.units).toFixed(2)|| '0',
     }))
+    const allUnits = chartData.flatMap(d => [parseFloat(d.predsUnits), parseFloat(d.picksUnits)])
+    const minY = Math.floor(Math.min(...allUnits) - 5)
+    const maxY = Math.ceil(Math.max(...allUnits) + 5)
+    const domain = [minY, maxY]
     return (
         <div style={{ width: "100%", height: 500, marginTop: '30px' }}>
             <h2 style={{ textAlign: "center" }}>Units Won</h2>
@@ -47,7 +51,7 @@ const UnitsChart: React.FC<ChartProps> = ({ data }) => {
                         }}
                     />
                     <YAxis
-                        domain={[-20, 20]}
+                        domain={domain}
                         label={{
                             value: "Units",
                             angle: -90,
