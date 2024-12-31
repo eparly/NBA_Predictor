@@ -1,7 +1,7 @@
 import { Bucket } from 'aws-cdk-lib/aws-s3'
 import { Table, TableProps, Attribute, AttributeType } from 'aws-cdk-lib/aws-dynamodb'
 import { Construct } from 'constructs'
-import { Duration, Stack, StackProps } from 'aws-cdk-lib'
+import { CfnOutput, Duration, Stack, StackProps } from 'aws-cdk-lib'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 
 
@@ -37,6 +37,17 @@ export class StatefulStack extends Stack {
 		})
 		this.oddsQueue = new Queue(this, 'OddsQueue', {
 			visibilityTimeout: Duration.minutes(10)
-		})		
+		})
+		
+		new CfnOutput(this, 'NbaBucketName', {
+			value: this.NbaBucket.bucketName,
+			exportName: 'NbaBucketName'
+		})
+			
+		new CfnOutput(this, 'NbaTableName', {
+			value: this.NbaTable.tableName,
+			exportName: 'NbaTableName'
+		})
+			
   }
 }
