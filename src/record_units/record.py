@@ -13,7 +13,7 @@ class RecordService:
         self.yesterday = (date - timedelta(1)).strftime('%Y-%m-%d')
     
     def update_all_records(self):
-        results, _ = self.dynamoDbService.get_all_recent_records('results')
+        results = self.dynamoDbService.get_all_recent_records('results', self.yesterday)
         # results = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'results')
         self.update_records(results)
         self.update_picks(results)

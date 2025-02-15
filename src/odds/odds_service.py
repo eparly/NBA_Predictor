@@ -31,12 +31,14 @@ class OddsService:
         response = requests.get(url, headers=headers, params=querystring)
         # response = self.response
         games = len(response.json()['results'])
+        print(response.json()['results'])
         # games from this api arent in the same order as the other one, need to enter these ones in the same order as we do for all predictions
         odds_data = []
         ml_data = []
         i = 0
         for i in range(games):
             if "odds" not in response.json()['results'][i]:
+                print(response.json()['results'][i])
                 return 'no odds yet, check back later'
             spread = response.json(
             )['results'][i]['odds'][0]['spread']['current']
