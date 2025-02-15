@@ -78,21 +78,23 @@ class DynamoDBService:
             print(f"Error querying items: {e}")
             return []
     
-    def get_most_recent_record(self, record_type):
+    def get_most_recent_record(self, record_type, date):
         try:
-            scan_response = self.table.scan(
-                FilterExpression=Attr('type-gameId').begins_with(record_type),
-                ProjectionExpression='#d',
-                ExpressionAttributeNames={'#d': 'date'},
-            )
-            print('scan_response', scan_response)
+            # scan_response = self.table.scan(
+            #     FilterExpression=Attr('type-gameId').begins_with(record_type),
+            #     ProjectionExpression='#d',
+            #     ExpressionAttributeNames={'#d': 'date'},
+            # )
+            # print(record_type)
+            # print('scan_response', scan_response)
             
-            if 'Items' in scan_response and len(scan_response['Items']) > 0:
-                most_recent_date = max(item['date'] for item in scan_response['Items'])
-            else:
-                return None
+            # if 'Items' in scan_response and len(scan_response['Items']) > 0:
+            #     most_recent_date = max(item['date'] for item in scan_response['Items'])
+            #     print(most_recent_date)
+            # else:
+            #     return None
             query_response = self.table.query(
-                KeyConditionExpression=Key('date').eq(most_recent_date) & Key('type-gameId').begins_with(record_type),
+                KeyConditionExpression=Key('date').eq(date) & Key('type-gameId').begins_with(record_type),
                 ScanIndexForward=False,  # Sort in descending order by date
                 Limit=1  # Get only the most recent record
             )
@@ -109,10 +111,10 @@ class DynamoDBService:
         except ClientError as e:
             print(f"Error querying items: {e}")
             return None
-    def get_all_recent_records(self, record_type):
+    def get_all_recent_records(self, record_type, date):
         print('getting', record_type)
         try:
-            most_recent_record = self.get_most_recent_record(record_type)
+            most_recent_record = self.get_most_recent_record(record_type, date)
             print(most_recent_record)
             if not most_recent_record:
                 return []
@@ -123,7 +125,7 @@ class DynamoDBService:
                 KeyConditionExpression = Key('date').eq(most_recent_date) & Key('type-gameId').begins_with(record_type)
             )
             
-            return response.get('Items', []), most_recent_date
+            return response.get('Items', [])
         except NoCredentialsError:
             print("Credentials not available")
             return []
