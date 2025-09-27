@@ -32,6 +32,7 @@ class DynamoDBService:
             return None
         
     def create_item(self, item):
+        item['season'] = '2'
         try:
             # Check if the item already exists
             print(self.table.key_schema)
