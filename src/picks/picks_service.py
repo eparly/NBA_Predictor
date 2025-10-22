@@ -15,9 +15,9 @@ class PicksService:
     def all_picks(self):
         odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.date, 'odds')
         predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.date, 'predictions')
-        # self.value_picks(odds, predictions)
-        # self.spread_picks(odds, predictions)
-        # self.total_picks(odds, predictions)
+        self.value_picks(odds, predictions)
+        self.spread_picks(odds, predictions)
+        self.total_picks(odds, predictions)
         self.ev_picks(odds, predictions)
         
     def value_picks(self, odds, predictions):
