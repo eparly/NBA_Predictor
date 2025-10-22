@@ -19,6 +19,7 @@ class RecordService:
         self.update_picks(results)
         self.update_totals(results)
         self.update_spreads(results)
+        self.evaluate_and_update_ev_record(results)
         return
 
         
@@ -367,5 +368,301 @@ class RecordService:
         dates = self.generate_date_range(start_date, end_date)
         for date in dates:
             print('running for date', date)
-            self.run_for_date(date)      
-   
+            self.run_for_date(date)
+
+    def test_ev_picks(self, start_date: str, end_date: str, ev_threshold: float = 0.05):
+        """
+        Simulates running the ev_picks function for a given date range, evaluates the results, and stores the picks and records in DynamoDB.
+        Filters picks based on the provided EV threshold.
+        """
+        dates = self.generate_date_range(start_date, end_date)
+        total_units = 0
+        total_correct = 0
+        total_picks = 0
+        bankrolls = []
+        
+        created_records = []
+        
+
+        for date in dates:
+            # Set the date for the simulation
+            eastern = dateutil.tz.gettz('US/Eastern')
+            self.str_date = datetime.strptime(date, '%Y-%m-%d').replace(tzinfo=eastern).strftime('%Y-%m-%d')
+            self.yesterday = (datetime.strptime(date, '%Y-%m-%d') - timedelta(1)).strftime('%Y-%m-%d')
+
+            # Fetch data for the date
+            odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.str_date, 'odds')
+            predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.str_date, 'predictions')
+            results = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.str_date, 'results')
+
+            # Generate picks using ev_picks
+            picks = []
+            for pred in predictions:
+                game_id = pred['type-gameId'].split('::')[1]
+                homescore = int(pred['homescore'])
+                awayscore = int(pred['awayscore'])
+                confidence = float(pred['confidence'])
+                try:
+                    game_odds = [item for item in odds if item['type-gameId'].split('::')[1] == game_id][0]
+                except IndexError:
+                    continue
+
+                # Calculate probabilities
+                home_confidence = confidence if homescore >= awayscore else 1 - confidence
+                away_confidence = 1 - home_confidence
+
+                # Calculate payouts
+                actual_home = float(game_odds['home_ml'])
+                actual_away = float(game_odds['away_ml'])
+                payout_home = actual_home - 1  # Subtracting 1 to account for the bet amount
+                payout_away = actual_away - 1
+
+                # Calculate EV for home and away
+                ev_home = (home_confidence * payout_home) - (away_confidence * 1)
+                ev_away = (away_confidence * payout_away) - (home_confidence * 1)
+
+                # Make picks based on EV threshold
+                if ev_home > ev_threshold:
+                    picks.append({
+                        'type-gameId': f'picks::ev::{game_id}',
+                        'pick': pred['hometeam'],
+                        'actual': actual_home
+                    })
+                elif ev_away > ev_threshold:
+                    picks.append({
+                        'type-gameId': f'picks::ev::{game_id}',
+                        'pick': pred['awayteam'],
+                        'actual': actual_away
+                    })
+
+            # Initialize all_time if not already set
+            yesterday_record = self.dynamoDbService.get_items_by_date_and_exact_sort_key(self.yesterday, 'record::ev')
+            yesterday_record = yesterday_record[0] if yesterday_record else {}
+
+            all_time = yesterday_record.get('allTime', {
+                "correct": 0,
+                "total": 0,
+                "percentage": "0.0",
+                "units": "0.0",
+                "bankroll": "100.0"
+            })
+
+            # Initialize bankroll as a string and convert when needed
+            bankroll = float(all_time.get("bankroll", "100.0"))
+            bankrolls.append(bankroll)
+
+            # Calculate Kelly Fraction and Bet Size
+            for pick in picks:
+                b = float(pick['actual']) - 1  # Net payout
+                p = confidence  # Probability of winning
+                q = 1 - p  # Probability of losing
+                kelly_fraction = (b * p - q) / b
+
+                # Apply 50% Kelly Criterion
+                if kelly_fraction > 0:
+                    bet_size = bankroll * kelly_fraction * 0.50  # Increased from 25% to 50%
+                    pick['kelly_fraction'] = kelly_fraction
+                    pick['bet_size'] = round(bet_size, 2)
+
+            # Calculate total Kelly bets for the day
+            total_kelly_bets = sum(pick['bet_size'] for pick in picks if 'bet_size' in pick)
+            daily_cap = bankroll * 0.10  # 5% of the bankroll
+
+            # Scale down bets if total exceeds daily cap
+            if total_kelly_bets > daily_cap:
+                scaling_factor = daily_cap / total_kelly_bets
+                for pick in picks:
+                    if 'bet_size' in pick:
+                        pick['bet_size'] = round(pick['bet_size'] * scaling_factor, 2)
+
+            # Check for negative bankroll
+            if bankroll <= 0:
+                print(f"Bankroll depleted on {self.str_date}. Ending simulation.")
+                break
+
+            # Update bankroll based on results
+            for pick in picks:
+                if 'bet_size' in pick:
+                    result = [x for x in results if x['type-gameId'].split('::')[-1] == pick['type-gameId'].split('::')[-1]]
+                    if result:
+                        result = result[0]
+                        actual_winner = get_winner(result)
+                        predicted_winner = pick['pick']
+                        if predicted_winner == result['hometeam']:
+                            predicted_winner = 'home'
+                        else:
+                            predicted_winner = 'away'
+
+                        if predicted_winner == actual_winner:
+                            bankroll += pick['bet_size'] * (float(pick['actual']) - 1)
+                        else:
+                            bankroll -= pick['bet_size']
+
+            # Evaluate picks
+            units, correct = self.evaluate_picks(picks, results)
+            total_units += units
+            total_correct += correct
+            total_picks += len(picks)
+
+            # Store picks in DynamoDB
+            for pick in picks:
+                record = {
+                    'date': self.str_date,
+                    'type-gameId': pick['type-gameId'],
+                    'pick': pick['pick'],
+                    'actual': str(pick['actual']),
+                    'bet_size': str(pick['bet_size']) if 'bet_size' in pick else '0.0'
+                }
+                self.dynamoDbService.create_item(record)
+                created_records.append([record['type-gameId'], record['date']])
+
+            # Store daily record in DynamoDB
+            yesterday_record = self.dynamoDbService.get_items_by_date_and_exact_sort_key(self.yesterday, 'record::ev')
+            yesterday_record = yesterday_record[0] if yesterday_record else {}
+
+            all_time = yesterday_record.get('allTime', {
+                "correct": 0,
+                "total": 0,
+                "percentage": "0.0",
+                "units": "0.0"
+            })
+
+            # Update all-time record with bankroll as a string
+            updated_all_time = {
+                "correct": all_time["correct"] + correct,
+                "total": all_time["total"] + len(picks),
+                "percentage": str(round((all_time["correct"] + correct) / (all_time["total"] + len(picks)), 4) if (all_time["total"] + len(picks)) > 0 else 0.0),
+                "units": str(float(all_time["units"]) + units),
+                "bankroll": str(round(bankroll, 2))
+            }
+
+            daily_record = {
+                'date': self.str_date,
+                'type-gameId': 'record::ev',
+                'today': {
+                    'correct': correct,
+                    'total': len(picks),
+                    'percentage': str(round(correct / len(picks), 4) if len(picks) > 0 else 0.0),
+                    'units': str(units)
+                },
+                'allTime': updated_all_time
+            }
+            self.dynamoDbService.create_item(daily_record)
+            created_records.append([daily_record['type-gameId'], daily_record['date']])
+
+        # Print summary
+        print(f"Total Units: {total_units}")
+        print(f"Total Correct: {total_correct}")
+        print(f"Total Picks: {total_picks}")
+        print(f"Accuracy: {round(total_correct / total_picks, 4) if total_picks > 0 else 0.0}")
+        print(f"Final Bankroll: {round(bankroll, 2)}")
+        print(f"Bankrolls over time: {bankrolls}")
+        print(f"Max Bankroll: {round(max(bankrolls), 2)}")
+        print(f"Min Bankroll: {round(min(bankrolls), 2)}")
+        
+        # Cleanup: Delete all created records
+        print("Cleaning up created records...")
+        for record in created_records:
+            self.dynamoDbService.delete_item(record[1], record[0])
+        print("Cleanup complete.")
+        return
+
+    def evaluate_picks(self, picks, results):
+        """
+        Evaluates the picks against the results and calculates units won/lost and correct picks.
+        """
+        results_game_ids = [x['type-gameId'].split('::')[-1] for x in results]
+        picks_game_ids = [x['type-gameId'].split('::')[-1] for x in picks]
+        units = 0
+        correct = 0
+
+        results_with_picks = [x for x in results_game_ids if x in picks_game_ids]
+
+        for i in results_with_picks:
+            pick = [x for x in picks if x['type-gameId'].split('::')[-1] == i][0]
+            result = [x for x in results if x['type-gameId'].split('::')[-1] == i][0]
+            actual_winner = get_winner(result)
+            predicted_winner = pick['pick']
+
+            if predicted_winner == 'Los Angeles Clippers':
+                predicted_winner = 'LA Clippers'
+            predicted_winner = 'home' if predicted_winner == result['hometeam'] else 'away'
+
+            if predicted_winner == actual_winner:
+                correct += 1
+                units += float(pick['actual'])
+        units -= len(results_with_picks)
+        return round(units, 3), correct
+
+    def evaluate_and_update_ev_record(self, results):
+        """
+        Evaluates EV picks for a given date, updates the record in DynamoDB, and maintains a running total of the bankroll.
+        """
+        # Fetch picks for the date
+        picks = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.yesterday, 'picks::ev')
+
+        # Initialize all_time if not already set
+        yesterday_record = self.dynamoDbService.get_items_by_date_and_exact_sort_key(self.yesterday, 'record::ev')
+        yesterday_record = yesterday_record[0] if yesterday_record else {}
+
+        all_time = yesterday_record.get('allTime', {
+            "correct": 0,
+            "total": 0,
+            "percentage": "0.0",
+            "units": "0.0",
+            "bankroll": "100.0"  # Default starting bankroll
+        })
+
+        # Evaluate picks
+        units, correct = self.evaluate_picks(picks, results)
+
+        # Calculate bankroll
+        bankroll = float(all_time.get("bankroll", "100.0"))
+        for pick in picks:
+            result = [x for x in results if x['type-gameId'].split('::')[-1] == pick['type-gameId'].split('::')[-1]]
+            if result:
+                result = result[0]
+                actual_winner = get_winner(result)
+                predicted_winner = pick['pick']
+
+                if predicted_winner == result['hometeam']:
+                    predicted_winner = 'home'
+                else:
+                    predicted_winner = 'away'
+
+                if predicted_winner == actual_winner:
+                    bankroll += float(pick['bet_size']) * (float(pick['actual']) - 1)
+                else:
+                    bankroll -= float(pick['bet_size'])
+
+        # Calculate bankroll change from the previous day
+        previous_bankroll = float(all_time.get("bankroll", "100.0"))
+        bankroll_change = bankroll - previous_bankroll
+
+        # Update all-time record
+        updated_all_time = {
+            "correct": all_time["correct"] + correct,
+            "total": all_time["total"] + len(picks),
+            "percentage": str(round((all_time["correct"] + correct) / (all_time["total"] + len(picks)), 4) if (all_time["total"] + len(picks)) > 0 else 0.0),
+            "units": str(float(all_time["units"]) + units),
+            "bankroll": str(round(bankroll, 2))
+        }
+
+        # Create daily record
+        daily_record = {
+            'date': self.str_date,
+            'type-gameId': 'record::ev',
+            'today': {
+                'correct': correct,
+                'total': len(picks),
+                'percentage': str(round(correct / len(picks), 4) if len(picks) > 0 else 0.0),
+                'units': str(units),
+                'bankroll_change': str(round(bankroll_change, 2))
+            },
+            'allTime': updated_all_time
+        }
+
+        # Store the record in DynamoDB
+        self.dynamoDbService.create_item(daily_record)
+        print(f"EV Record updated for {self.str_date}: {daily_record}")
+        return

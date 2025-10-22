@@ -32,6 +32,7 @@ class DynamoDBService:
             return None
         
     def create_item(self, item):
+        item['season'] = '2'
         try:
             # Check if the item already exists
             print(self.table.key_schema)
@@ -132,3 +133,20 @@ class DynamoDBService:
         except ClientError as e:
             print(f"Error querying items: {e}")
             return []
+    
+    def delete_item(self, date, type_game_id):
+        """
+        Deletes an item from the DynamoDB table based on the primary key (date) and sort key (type-gameId).
+        """
+        try:
+            response = self.table.delete_item(
+                Key={
+                    'date': date,
+                    'type-gameId': type_game_id
+                }
+            )
+            # print(f"Deleted item with date: {date}, type-gameId: {type_game_id}")
+            return response
+        except Exception as e:
+            print(f"Error deleting item with date: {date}, type-gameId: {type_game_id}. Error: {e}")
+            raise

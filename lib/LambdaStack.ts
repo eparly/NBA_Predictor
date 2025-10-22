@@ -26,6 +26,7 @@ export class LambdaStack extends Stack {
     private readonly predictionLambda: Function
     private readonly oddsLambda: Function
     private readonly picksLambda: Function
+    private readonly migrationLambda: Function
     constructor(scope: Construct, id: string, deps: LambdaStackDeps, props?: StackProps) {
         super(scope, id, props)
 
@@ -208,5 +209,23 @@ export class LambdaStack extends Stack {
             schedule: Schedule.cron({ minute: '0', hour: '8' }),
             targets: [new SfnStateMachine(stateMachine)],
         })
+
+
+        this.migrationLambda = new Function(this, 'MigrationLambda', {
+            runtime: Runtime.PYTHON_3_10,
+            code: Code.fromAsset(__dirname + '../../src'),
+            handler: 'migration/handler.lambda_handler',
+            layers: [lambdaLayer],
+            environment: {
+                tableName: deps.table.tableName,
+                bucketName: deps.bucket.bucketName,
+                oddsQueueUrl: deps.oddsQueue.queueUrl
+            },
+            timeout: Duration.minutes(15),
+            memorySize: 256,
+            reservedConcurrentExecutions: 1
+        })
+
+        deps.table.grantReadWriteData(this.migrationLambda)
     }
 }
