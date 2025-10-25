@@ -57,7 +57,7 @@ def montecarlo(gameID, hometeam, awayteam, O_H, O_A, D_H, D_A, homeFactor=False,
     ft_p_b = O_A['FT_PCT']
     if(len(D_A)<1 or len(D_H) <1):
         return []
-    if(D_A['GP'].values[0] <= 1 or D_H['GP'].values[0] <= 1):
+    if(D_A['GP'].values[0] < 1 or D_H['GP'].values[0] < 1):
         return []
 
     c = 0

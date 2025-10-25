@@ -11,7 +11,8 @@ class PicksService:
         self.inverse_edge = inverse_edge
         eastern = dateutil.tz.gettz('US/Eastern')
         self.date = datetime.now(tz = eastern).strftime('%Y-%m-%d')
-        
+        self.yesterday = (datetime.now(tz = eastern) - timedelta(1)).strftime('%Y-%m-%d')
+        print('yesterday', self.yesterday)
     def all_picks(self):
         odds = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.date, 'odds')
         predictions = self.dynamoDbService.get_items_by_date_and_sort_key_prefix(self.date, 'predictions')
@@ -269,7 +270,7 @@ class PicksService:
         # Store picks in DynamoDB
         for pick in picks:
             record = {
-                'date': self.str_date,
+                'date': self.date,
                 'type-gameId': pick['type-gameId'],
                 'pick': pick['pick'],
                 'actual': str(pick['actual']),
