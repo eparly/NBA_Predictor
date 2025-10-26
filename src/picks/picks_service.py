@@ -219,13 +219,17 @@ class PicksService:
                 picks.append({
                     'type-gameId': f'picks::ev::{game_id}',
                     'pick': pred['hometeam'],
-                    'actual': actual_home
+                    'actual': actual_home,
+                    'hometeam': pred['hometeam'],
+                    'awayteam': pred['awayteam'],
                 })
             elif ev_away > ev_threshold:
                 picks.append({
                     'type-gameId': f'picks::ev::{game_id}',
                     'pick': pred['awayteam'],
-                    'actual': actual_away
+                    'actual': actual_away,
+                    'hometeam': pred['hometeam'],
+                    'awayteam': pred['awayteam'],
                 })
 
         # Initialize all_time if not already set
@@ -274,7 +278,9 @@ class PicksService:
                 'type-gameId': pick['type-gameId'],
                 'pick': pick['pick'],
                 'actual': str(pick['actual']),
-                'bet_size': str(pick['bet_size']) if 'bet_size' in pick else '0.0'
+                'bet_size': str(pick['bet_size']) if 'bet_size' in pick else '0.0',
+                'hometeam': pick['hometeam'],
+                'awayteam': pick['awayteam'],
             }
             self.dynamoDbService.create_item(record)
             
